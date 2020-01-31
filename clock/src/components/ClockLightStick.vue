@@ -1,7 +1,5 @@
 <template lang="pug">
-div(
-  :class="classObj"
-)
+div(:class="classObj")
 </template>
 
 <script>
@@ -12,7 +10,7 @@ export default {
       type: String,
       required: true
     },
-    isActive: {
+    isInactive: {
       type: Boolean,
       required: true
     }
@@ -22,7 +20,7 @@ export default {
       return [
         this.$style.wrap,
         this.$style[this.direction],
-        {[this.$style.isActive]: this.isActive }
+        {[this.$style.isInactive]: this.isInactive }
       ]
     }
   }
@@ -31,7 +29,7 @@ export default {
 
 <style lang="stylus" module>
 .wrap
-  background-color rgba(200, 255, 200, .2)
+  background yellowgreen
   border-radius 10px
 .vertical
   height 50px
@@ -39,6 +37,6 @@ export default {
 .horizontal
   height 10px
   width 50px
-.isActive
-  background yellowgreen
+.isInactive
+  background-color rgba(200, 255, 200, .2)
 </style>

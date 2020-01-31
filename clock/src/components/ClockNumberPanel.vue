@@ -3,7 +3,7 @@ div(:class="$style.wrap")
   ClockLightStick(
     v-for="(item, index) in 7"
     :key="index"
-    :isActive="iActive(index + 1)"
+    :isInactive="isInactive(index + 1)"
     :direction="direction(index + 1)"
     :class="$style[`item-${index + 1}`]"
   )
@@ -27,16 +27,17 @@ export default {
   computed: {
     inActiveIndexList() {
       /**
-       * 1: 中央上
-       * 2: 中央中央
-       * 3: 中央下
-       * 4: 右上
-       * 5: 右下
-       * 6: 左上
-       * 7: 左下
+       * ClockLightStickの位置
+       * 1番目: 中央上
+       * 2番目: 中央中央
+       * 3番目: 中央下
+       * 4番目: 右上
+       * 5番目: 右下
+       * 6番目: 左上
+       * 7番目: 左下
       */
 
-      // 表示されないインデックス
+      // 非アクティブ箇所のインデックス
       const zero = [2]
       const one = [1, 2, 3, 6, 7]
       const two = [5, 6]
@@ -51,9 +52,9 @@ export default {
 
       return numbers[this.number]
     },
-    iActive() {
+    isInactive() {
       return index => {
-        return this.inActiveIndexList.indexOf(index) !== -1 ? false : true
+        return this.inActiveIndexList.indexOf(index) !== -1 ? true : false
       }
     },
     direction() {

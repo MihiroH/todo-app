@@ -33,29 +33,35 @@ export default {
   },
   data() {
     return {
-      moment: {}
+      moment: {
+        hours: 0,
+        minutes: 0,
+        seconds: 0
+      }
     }
   },
   created() {
-    this.getMoment()
+    const self = this
+    setInterval((function moment() {
+      self.moment = self.getMoment()
+      return moment
+    })(), 1000);
   },
   computed: {
     getNumber() {
       return index => {
-        const hours = this.moment.hours
-        const minutes = this.moment.minutes
-        const seconds = this.moment.seconds
-        if (!hours) return 0
-        if (!minutes) return 0
-        if (!seconds) return 0
+        // splitするためにString型に変換: hours.split()
+        const hours = String(this.moment.hours)
+        const minutes = String(this.moment.minutes)
+        const seconds = String(this.moment.seconds)
 
         let number = 0
-        if (index === 1) number = hours.length === 2 ? hours.substr(0, 1) : 0
-        if (index === 2) number = hours.length === 2 ? hours.substr(1, 2) : hours
-        if (index === 3) number = minutes.length === 2 ? minutes.substr(0, 1) : 0
-        if (index === 4) number = minutes.length === 2 ? minutes.substr(1, 2) : minutes
-        if (index === 5) number = seconds.length === 2 ? seconds.substr(0, 1) : 0
-        if (index === 6) number = seconds.length === 2 ? seconds.substr(1, 2) : seconds
+        if (index === 1) number = hours.length === 2 ? hours.split('')[0] : 0
+        if (index === 2) number = hours.length === 2 ? hours.split('')[1] : hours
+        if (index === 3) number = minutes.length === 2 ? minutes.split('')[0] : 0
+        if (index === 4) number = minutes.length === 2 ? minutes.split('')[1] : minutes
+        if (index === 5) number = seconds.length === 2 ? seconds.split('')[0] : 0
+        if (index === 6) number = seconds.length === 2 ? seconds.split('')[1] : seconds
 
         return Number(number)
       }
@@ -63,15 +69,13 @@ export default {
   },
   methods: {
     getMoment() {
-      setInterval(() => {
-        const now = new Date()
-        this.moment = {
-          hours: String(now.getHours()),
-          minutes: String(now.getMinutes()),
-          seconds: String(now.getSeconds())
-        }
-      }, 1000);
-    },
+      const now = new Date()
+      return {
+        hours: now.getHours(),
+        minutes: now.getMinutes(),
+        seconds: now.getSeconds()
+      }
+    }
   }
 }
 </script>
