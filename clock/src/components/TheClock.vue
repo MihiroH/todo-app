@@ -82,7 +82,6 @@ export default {
 
 <style lang="stylus" module>
 .wrap
-  background-color #111
   filter drop-shadow(10px 10px 10px rgba(0,0,0,0.6))
   display flex
   justify-content center
