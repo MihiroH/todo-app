@@ -1,5 +1,10 @@
 <template lang="pug">
-li(:class="$style.wrap")
+li(
+  :class="$style.wrap"
+  @keyup.exact.enter="edit"
+  @keyup.delete="removeTodo"
+  @keyup.ctrl.190="toggleChecked"
+)
   TodoItemInput(
     v-if="editMode"
     :task="task"
@@ -10,8 +15,11 @@ li(:class="$style.wrap")
   TodoItemText(
     v-else
     :task="task"
+    :isChecked="isChecked"
+    :class="$style.txt"
     @edit-icon-click="edit"
     @trash_can-icon-click="removeTodo"
+    @checkbox-click="toggleChecked"
   )
 </template>
 
@@ -39,7 +47,9 @@ export default {
   },
   data() {
     return {
-      editModeFlg: false
+      editModeFlg: false,
+      isChecked: false,
+      timerId: null
     }
   },
   computed: {
@@ -55,46 +65,31 @@ export default {
     ]),
     edit() {
       this.editModeFlg = true
-      this.$emit('edit-icon-click')
     },
     endEdit() {
       this.editModeFlg = false
-      this.$emit('input-end')
     },
     removeTodo() {
+      if (this.editModeFlg) return
       this.REMOVE_TODO(this.uid)
     },
-    handleKeypress() {
-      const self = this
-
-      const keyStatus = {}
-
-      // キーが押されたら実行する処理
-      const shortcutKey = (e) => {
-        keyStatus[e.keyCode] = true; // 該当のキーコードをtrueにする
-        // option(alt) + n を押下時
-        if(keyStatus[18] && keyStatus[78]) {
-          self.addTodo('')
-          return false
-        }
-
-        // option(alt) + enter を押下時
-        // if(keyStatus[91] && keyStatus[13]) {
-        //   self.addTodo('enter')
-        //   return false
-        // }
+    completeTodo() {
+      this.REMOVE_TODO(this.uid)
+    },
+    toggleChecked() {
+      this.isChecked = !this.isChecked
+      this.wait(1500, this.completeTodo)
+    },
+    wait(delay, callback) {
+      if (this.timerId) {
+        clearTimeout(this.timerId)
+        this.timerId = null
+        return
       }
 
-      // キーが離されたら実行する処理
-      const removeKeyStatus = (e) => keyStatus[e.keyCode] = false
-
-      document.addEventListener('keydown', shortcutKey)
-      document.addEventListener('keyup', removeKeyStatus)
-
-      this.$once('hook:beforeDestroy', () => {
-        document.removeEventListener('keydown', shortcutKey);
-        document.removeEventListener('keyup', removeKeyStatus);
-      });
+      this.timerId = setTimeout(() => {
+        callback()
+      }, delay)
     }
   }
 }
@@ -102,6 +97,6 @@ export default {
 
 <style lang="stylus" module>
 .wrap
-  padding-left 8px
+  padding 0 8px
   color #fff
 </style>

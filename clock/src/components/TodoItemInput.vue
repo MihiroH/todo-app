@@ -3,8 +3,9 @@ input(
   type="text"
   v-model="value"
   :class="$style.todoInput"
+  data-tag="input"
   @blur="saveEdit"
-  @keyup.exact.alt.enter="saveEdit"
+  @keyup.exact.ctrl.enter="saveEdit"
   @keyup.esc="saveEdit"
 )
 </template>
@@ -41,6 +42,7 @@ export default {
     saveEdit() {
       if (this.value === '') {
         this.value = this.task
+        this.kdke
       } else {
         this.EDIT_TODO({
           id: this.uid,
@@ -58,9 +60,11 @@ export default {
 .todoInput
   border none
   background transparent
-  padding 3px
+  padding 4px
   padding-left 0
   outline none
   font inherit
   color inherit
+  display block
+  width 100%
 </style>

@@ -5,6 +5,7 @@ div(:class="$style.wrap")
     input(
       v-model="text"
       :class="$style.input"
+      data-tag="input"
       placeholder="New Todo"
       @keyup.exact.alt.enter="addTodo(text)"
     )
@@ -13,15 +14,18 @@ div(:class="$style.wrap")
       :class="$style.btn"
       @click="addTodo(text)"
     ) 追加
-  ul(:class="$style.list")
+  transition-group(
+    tag="ul"
+    name="todoItem"
+    :class="$style.list"
+  )
     TodoItem(
       v-for="todo in getTodos"
       :key="todo.id"
-      :class="[$style.listItem, { [$style['is-active']]: editModeFlg } ]"
+      :class="$style.listItem"
       :task="todo.todo"
       :uid="todo.id"
-      @edit-icon-click="editModeFlg = true"
-      @input-end="editModeFlg = false"
+      tabindex="0"
     )
 </template>
 
@@ -39,8 +43,7 @@ export default {
   },
   data() {
     return {
-      text: '',
-      editModeFlg: false
+      text: ''
     }
   },
   computed: {
@@ -62,16 +65,39 @@ export default {
       'fetchTodos'
     ]),
     addTodo(text) {
-      if (!text) return
+      if (text) {
+        const todo = {
+          id: getUniqueStr(),
+          todo: text
+        }
+        this.ADD_TODO(todo)
 
-      const todo = {
-        id: getUniqueStr(),
-        todo: text
+        this.text = ''
       }
-      this.ADD_TODO(todo)
 
-      this.text = ''
       this.$el.querySelector(`.${this.$style.input}`).focus()
+    },
+    prevTodo() {
+      const $activeEl = document.activeElement
+      const $prevEl = $activeEl.previousElementSibling
+      const $listItemLastChild = this.$el.querySelector(`.${this.$style.listItem}:last-child`)
+      const attrData = $activeEl.getAttribute('data-tag')
+
+      if (attrData === 'input') return
+      if (attrData === 'body') return $listItemLastChild.focus()
+      if (!$prevEl) return $listItemLastChild.focus()
+      $prevEl.focus()
+    },
+    nextTodo() {
+      const $activeEl = document.activeElement
+      const $nextEl = $activeEl.nextElementSibling
+      const $listItemFirstChild = this.$el.querySelector(`.${this.$style.listItem}:first-child`)
+      const attrData = $activeEl.getAttribute('data-tag')
+
+      if (attrData === 'input') return
+      if (attrData === 'body') return $listItemFirstChild.focus()
+      if (!$nextEl) return $listItemFirstChild.focus()
+      $nextEl.focus()
     },
     handleKeypress() {
       const self = this
@@ -80,18 +106,16 @@ export default {
 
       // キーが押されたら実行する処理
       const shortcutKey = (e) => {
-        keyStatus[e.keyCode] = true; // 該当のキーコードをtrueにする
-        // option(alt) + n を押下時
-        if(keyStatus[18] && keyStatus[78]) {
-          self.addTodo('')
-          return false
-        }
-
-        // option(alt) + enter を押下時
-        // if(keyStatus[91] && keyStatus[13]) {
-        //   self.addTodo('enter')
-        //   return false
-        // }
+        // 該当のキーコードをtrueにする
+        keyStatus[e.keyCode] = true;
+        // option(alt) + n
+        if(keyStatus[18] && keyStatus[78]) return self.addTodo('')
+        // ↑
+        if(keyStatus[38]) return self.prevTodo()
+        // ↓
+        if(keyStatus[40]) return self.nextTodo()
+        // esc
+        if(keyStatus[27]) e.target.blur()
       }
 
       // キーが離されたら実行する処理
@@ -141,6 +165,35 @@ export default {
   vertical-align middle
   &:focus
     outline none
+    position relative
+    z-index 1
+    &:after
+      @keyframes ripple
+        0%
+          opacity 0
+        50%
+          opacity 1
+        100%
+          opacity 0
+          transform scale(1.01)
+
+      animation ripple 1s infinite ease
+      background transparent
+      border 1px solid #9acd32
+      border-radius 999px
+      bottom 0
+      content ''
+      display block
+      height calc(100% + 12px * 2)
+      left -12px
+      margin auto
+      opacity 0
+      position absolute
+      right @left
+      top 0
+      transform scale(.8)
+      width @height
+      z-index -1
 .input
   padding 0 16px
   width 400px
@@ -155,11 +208,16 @@ export default {
 .list
   margin 50px auto 0
   width 498px
+  position relative
 .listItem
   border-bottom 2px solid #9acd32
   position relative
-  &.is-active,
-  &:hover
+  display inline-block
+  transition .3s
+  width 100%
+  margin-bottom 20px
+  &:focus
+    outline none
     border-bottom 2px solid #111
     &::after
       position absolute
@@ -171,6 +229,17 @@ export default {
       content ''
       display block
       animation move 2s infinite linear
-  &:not(:first-child)
-    margin-top 20px
+</style>
+
+<style lang="stylus" scoped>
+.todoItem-enter-active
+  transform translateY(-20px)
+.todoItem-leave-to
+  transition .1s
+.todoItem-enter-active,
+.todoItem-leave-to
+  opacity 0
+.todoItem-leave-active
+  position absolute
+  left 0
 </style>

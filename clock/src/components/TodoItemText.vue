@@ -1,32 +1,45 @@
 <template lang="pug">
 div(:class="$style.wrap")
-  div(
-    :class="$style.icon"
-    @click="edit"
+  BaseCheckbox(
+    :isChecked="isChecked"
+    :class="$style.checkbox"
+    @checkbox-click="handleClickCheckbox"
   )
-    img(
-      src="@/assets/icon_pen.svg"
-      alt="編集する"
+  p(:class="$style.txt") {{ task }}
+  div(:class="$style.icons")
+    div(
+      :class="$style.icon"
+      @click="edit"
     )
-  p(
-    :class="$style.txt"
-  ) {{ task }}
-  div(
-    :class="$style.icon"
-    @click="removeTodo"
-  )
-    img(
-      src="@/assets/icon_trash_can.svg"
-      alt="削除する"
+      img(
+        src="@/assets/icon_pen.svg"
+        alt="編集する"
+      )
+    div(
+      :class="$style.icon"
+      @click="removeTodo"
     )
+      img(
+        src="@/assets/icon_trash_can.svg"
+        alt="削除する"
+      )
 </template>
 
 <script>
+import BaseCheckbox from '@/components/BaseCheckbox'
+
 export default {
   name: 'TodoItem',
+  components: {
+    BaseCheckbox
+  },
   props: {
     task: {
       type: String,
+      required: true
+    },
+    isChecked: {
+      type: Boolean,
       required: true
     }
   },
@@ -36,31 +49,44 @@ export default {
     },
     removeTodo() {
       this.$emit('trash_can-icon-click')
+    },
+    handleClickCheckbox() {
+      this.$emit('checkbox-click')
     }
   }
 }
 </script>
 
 <style lang="stylus" module>
+.wrap
+  position relative
+.checkbox
+  position absolute
+  top 5px
+  left -30px
 .icon,
 .txt
   display inline-block
   vertical-align middle
-.icon
-  width 16px
-  &:hover
-    cursor pointer
 .txt
-  margin-left 12px
   background transparent
   padding 5px
   padding-left 0
   outline none
   font-size 16px
-  & + .icon
-    position absolute
-    top 50%
-    right 8px
-    transform translateY(-50%)
+  white-space nowrap
+  max-width calc(100% - 64px)
+  overflow hidden
+  text-overflow ellipsis
+.icons
+  position absolute
+  top 50%
+  right 8px
+  transform translateY(-50%)
+.icon
+  margin-left 16px
+  width 16px
+  &:hover
+    cursor pointer
 </style>
 
