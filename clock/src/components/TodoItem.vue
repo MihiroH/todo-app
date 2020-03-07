@@ -5,11 +5,16 @@ li(
   @keyup.delete="removeTodo"
   @keydown="handleKeydown"
 )
-  TodoItemInput(
-    v-if="editMode"
-    :task="task"
+  TodoItemInputSet(
+    v-if="!task"
     :uid="uid"
-    @input-change="$emit('input-change')"
+    :task="task"
+    @input-end="endEdit"
+  )
+  TodoItemInputSave(
+    v-else-if="editMode"
+    :uid="uid"
+    :task="task"
     @input-end="endEdit"
   )
   TodoItemText(
@@ -24,7 +29,8 @@ li(
 </template>
 
 <script>
-import TodoItemInput from '@/components/TodoItemInput'
+import TodoItemInputSave from '@/components/TodoItemInputSave'
+import TodoItemInputSet from '@/components/TodoItemInputSet'
 import TodoItemText from '@/components/TodoItemText'
 
 import { mapMutations } from 'vuex'
@@ -32,7 +38,8 @@ import { mapMutations } from 'vuex'
 export default {
   name: 'TodoItem',
   components: {
-    TodoItemInput,
+    TodoItemInputSave,
+    TodoItemInputSet,
     TodoItemText
   },
   props: {
@@ -70,7 +77,7 @@ export default {
       this.editModeFlg = false
     },
     removeTodo() {
-      if (this.editModeFlg) return
+      if (this.editMode) return
       this.REMOVE_TODO(this.uid)
     },
     completeTodo() {
@@ -94,10 +101,9 @@ export default {
     handleKeydown(e) {
       // Windows Ctrl キー or Mac Command キー + . の判定
       // https://hacknote.jp/archives/7321/
-      if (e.keyCode !== 190) return
       if (e.ctrlKey && e.metaKey) return
       if (!e.ctrlKey && !e.metaKey) return
-      this.toggleChecked()
+      if (e.keyCode === 190) return this.toggleChecked()
     }
   }
 }

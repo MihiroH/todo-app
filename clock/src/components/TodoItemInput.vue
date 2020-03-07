@@ -4,17 +4,16 @@ input(
   v-model="value"
   :class="$style.todoInput"
   data-tag="input"
-  @blur="saveEdit"
-  @keyup.esc="saveEdit"
+  @input="handleInput"
+  @blur="end"
+  @keyup.esc="end"
   @keydown="handleKeydown"
 )
 </template>
 
 <script>
-import { mapMutations } from 'vuex'
-
 export default {
-  name: 'TodoItem',
+  name: 'TodoItemInput',
   props: {
     uid: {
       type: String,
@@ -35,26 +34,16 @@ export default {
     this.$el.focus()
   },
   methods: {
-    ...mapMutations('todos', [
-      'EDIT_TODO',
-      'REMOVE_TODO'
-    ]),
-    saveEdit() {
-      if (this.value === '') {
-        this.value = this.task
-      } else {
-        this.EDIT_TODO({
-          id: this.uid,
-          todo: this.value
-        })
-      }
-
+    end() {
       this.$emit('input-end')
+    },
+    handleInput() {
+      this.$emit('input', this.value)
     },
     handleKeydown(e) {
       if (e.ctrlKey && e.metaKey) return
       if (!e.ctrlKey && !e.metaKey) return
-      if (e.keyCode === 13) return this.saveEdit()
+      if (e.keyCode === 13) return this.end()
     }
   }
 }

@@ -73,17 +73,13 @@ export default {
       'fetchTodos'
     ]),
     addTodo(text) {
-      if (text) {
-        const todo = {
-          id: getUniqueStr(),
-          todo: text
-        }
-        this.ADD_TODO(todo)
-
-        this.text = ''
+      const todo = {
+        id: getUniqueStr(),
+        todo: text
       }
-
+      this.ADD_TODO(todo)
       this.$el.querySelector(`.${this.$style.input}`).focus()
+      this.text = ''
     },
     activeElement() {
       const $activeEl = document.activeElement
@@ -151,8 +147,6 @@ export default {
 
         // 該当のキーコードをtrueにする
         keyStatus[e.keyCode] = true;
-        // option(alt) + n
-        if(keyStatus[18] && keyStatus[78]) return self.addTodo('')
         // ↑
         if(keyStatus[38]) return self.focusPrev()
         // ↓
@@ -187,6 +181,8 @@ export default {
         return this.replaceTodos(direction)
       }
 
+      // n
+      if(e.keyCode === 78) return this.addTodo('')
       // k
       if (e.keyCode === 75) return this.focusPrev()
       // j
