@@ -7,7 +7,7 @@ div(:class="$style.wrap")
       :class="$style.input"
       data-tag="input"
       placeholder="New Todo"
-      @keyup.exact.alt.enter="addTodo(text)"
+      @keydown="handleKeydownInput"
     )
     button(
       type="button"
@@ -49,7 +49,14 @@ export default {
   computed: {
     ...mapGetters('todos', [
       'getTodos'
-    ])
+    ]),
+    todoList() {
+      return this.$el.getElementsByClassName(`${this.$style.list}`)[0]
+    },
+    notExistsTodo() {
+      if (this.todoList.children.length === 0) return true
+      return false
+    }
   },
   created() {
     this.fetchTodos()
@@ -59,7 +66,8 @@ export default {
   },
   methods: {
     ...mapMutations('todos', [
-      'ADD_TODO'
+      'ADD_TODO',
+      'REPLACE_TODOS'
     ]),
     ...mapActions('todos', [
       'fetchTodos'
@@ -77,27 +85,58 @@ export default {
 
       this.$el.querySelector(`.${this.$style.input}`).focus()
     },
-    prevTodo() {
+    activeElement() {
       const $activeEl = document.activeElement
-      const $prevEl = $activeEl.previousElementSibling
-      const $listItemLastChild = this.$el.querySelector(`.${this.$style.listItem}:last-child`)
-      const attrData = $activeEl.getAttribute('data-tag')
-
-      if (attrData === 'input') return
-      if (attrData === 'body') return $listItemLastChild.focus()
-      if (!$prevEl) return $listItemLastChild.focus()
-      $prevEl.focus()
+      const attrTag = $activeEl.getAttribute('data-tag')
+      return {
+        tagName: attrTag,
+        $current: $activeEl,
+        $prevEl: $activeEl.previousElementSibling,
+        $nextEl: $activeEl.nextElementSibling
+      }
     },
-    nextTodo() {
-      const $activeEl = document.activeElement
-      const $nextEl = $activeEl.nextElementSibling
-      const $listItemFirstChild = this.$el.querySelector(`.${this.$style.listItem}:first-child`)
-      const attrData = $activeEl.getAttribute('data-tag')
+    focusPrev() {
+      if (this.notExistsTodo) return
 
-      if (attrData === 'input') return
-      if (attrData === 'body') return $listItemFirstChild.focus()
-      if (!$nextEl) return $listItemFirstChild.focus()
-      $nextEl.focus()
+      const activeEl = this.activeElement()
+      const $listItemLastChild = this.todoList.lastElementChild
+
+      if (activeEl.tagName === 'input') return
+      if (activeEl.tagName === 'body') return $listItemLastChild.focus()
+      if (!activeEl.$prevEl) return $listItemLastChild.focus()
+
+      activeEl.$prevEl.focus()
+    },
+    focusNext() {
+      if (this.notExistsTodo) return
+
+      const activeEl = this.activeElement()
+      const $listItemFirstChild = this.todoList.firstElementChild
+
+      if (activeEl.attrData === 'input') return
+      if (activeEl.attrData === 'body') return $listItemFirstChild.focus()
+      if (!activeEl.$nextEl) return $listItemFirstChild.focus()
+      activeEl.$nextEl.focus()
+    },
+    replaceTodos(direction) {
+      if (this.notExistsTodo) return
+
+      const activeEl = this.activeElement()
+      const exceptList = ['input', 'body']
+      if (exceptList.includes(activeEl.tagName)) return
+
+      const index = [...this.todoList.children].indexOf(activeEl.$current)
+      const prevIndex = direction === 'top' ? index - 1 : index
+      const nextIndex = direction === 'bottom' ? index + 1 : index
+
+      if (prevIndex < 0) return
+      if (nextIndex > this.todoList.children.length) return
+
+      this.REPLACE_TODOS({ prevIndex, nextIndex, direction })
+
+      setTimeout(() => [
+        activeEl.$current.focus()
+      ], 100)
     },
     handleKeypress() {
       const self = this
@@ -106,14 +145,17 @@ export default {
 
       // キーが押されたら実行する処理
       const shortcutKey = (e) => {
+        // Windows Ctrl キー or Mac Command キー + something
+        if (e.ctrlKey || e.metaKey) return this.shortcutKeyMulti(e)
+
         // 該当のキーコードをtrueにする
         keyStatus[e.keyCode] = true;
         // option(alt) + n
         if(keyStatus[18] && keyStatus[78]) return self.addTodo('')
         // ↑
-        if(keyStatus[38]) return self.prevTodo()
+        if(keyStatus[38]) return self.focusPrev()
         // ↓
-        if(keyStatus[40]) return self.nextTodo()
+        if(keyStatus[40]) return self.focusNext()
         // esc
         if(keyStatus[27]) e.target.blur()
       }
@@ -127,7 +169,21 @@ export default {
       this.$once('hook:beforeDestroy', () => {
         document.removeEventListener('keydown', shortcutKey);
         document.removeEventListener('keyup', removeKeyStatus);
-      });
+      })
+    },
+    handleKeydownInput(e) {
+      // Windows Ctrl キー or Mac Command キー + enter の判定
+      // https://hacknote.jp/archives/7321/
+      if (e.ctrlKey && e.metaKey) return
+      if (!e.ctrlKey && !e.metaKey) return
+      if (e.keyCode === 13) return this.addTodo(this.text)
+    },
+    shortcutKeyMulti(e) {
+      const keyCodeArrow = [38, 40]
+      if (keyCodeArrow.includes(e.keyCode)) {
+        const direction = e.keyCode === 38 ? 'top' : 'bottom'
+        return this.replaceTodos(direction)
+      }
     }
   }
 }

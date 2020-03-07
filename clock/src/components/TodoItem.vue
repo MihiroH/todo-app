@@ -3,7 +3,7 @@ li(
   :class="$style.wrap"
   @keyup.exact.enter="edit"
   @keyup.delete="removeTodo"
-  @keyup.ctrl.190="toggleChecked"
+  @keydown="handleKeydown"
 )
   TodoItemInput(
     v-if="editMode"
@@ -90,6 +90,14 @@ export default {
       this.timerId = setTimeout(() => {
         callback()
       }, delay)
+    },
+    handleKeydown(e) {
+      // Windows Ctrl キー or Mac Command キー + . の判定
+      // https://hacknote.jp/archives/7321/
+      if (e.keyCode !== 190) return
+      if (e.ctrlKey && e.metaKey) return
+      if (!e.ctrlKey && !e.metaKey) return
+      this.toggleChecked()
     }
   }
 }

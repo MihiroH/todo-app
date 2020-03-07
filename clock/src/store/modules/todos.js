@@ -31,6 +31,14 @@ const mutations = {
   REMOVE_TODO(state, payload) {
     state.todos = state.todos.filter(todo => todo.id !== payload)
   },
+  REPLACE_TODOS(state, payload) {
+    const prevIndex = payload.prevIndex
+    const nextIndex = payload.nextIndex
+    const prevTodo = state.todos[prevIndex]
+
+    state.todos.splice(prevIndex, 1)
+    state.todos.splice(nextIndex, 0, prevTodo)
+  },
   UPDATE_LOADING_FLG(state, payload) {
     state.loading = payload
   }
@@ -58,7 +66,12 @@ export const pluginTodos = store => {
       return alert('localStorageが有効ではありません')
     }
 
-    const types = ['todos/ADD_TODO','todos/EDIT_TODO', 'todos/REMOVE_TODO']
+    const types = [
+      'todos/ADD_TODO',
+      'todos/EDIT_TODO',
+      'todos/REMOVE_TODO',
+      'todos/REPLACE_TODOS'
+    ]
     types.forEach(type => {
       if (mutation.type === type) {
         localStorage.setItem('todos', JSON.stringify(todos.todos))

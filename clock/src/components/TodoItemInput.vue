@@ -5,8 +5,8 @@ input(
   :class="$style.todoInput"
   data-tag="input"
   @blur="saveEdit"
-  @keyup.exact.ctrl.enter="saveEdit"
   @keyup.esc="saveEdit"
+  @keydown="handleKeydown"
 )
 </template>
 
@@ -42,7 +42,6 @@ export default {
     saveEdit() {
       if (this.value === '') {
         this.value = this.task
-        this.kdke
       } else {
         this.EDIT_TODO({
           id: this.uid,
@@ -51,6 +50,11 @@ export default {
       }
 
       this.$emit('input-end')
+    },
+    handleKeydown(e) {
+      if (e.ctrlKey && e.metaKey) return
+      if (!e.ctrlKey && !e.metaKey) return
+      if (e.keyCode === 13) return this.saveEdit()
     }
   }
 }
