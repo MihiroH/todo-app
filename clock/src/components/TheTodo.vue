@@ -134,6 +134,7 @@ export default {
 
       this.REPLACE_TODOS({ prevIndex, nextIndex, direction })
 
+      // vuexのstoreが更新されるのを待ってからfocus
       setTimeout(() => [
         activeEl.$current.focus()
       ], 100)
@@ -179,11 +180,17 @@ export default {
       if (e.keyCode === 13) return this.addTodo(this.text)
     },
     shortcutKeyMulti(e) {
+      // ↑, ↓
       const keyCodeArrow = [38, 40]
       if (keyCodeArrow.includes(e.keyCode)) {
         const direction = e.keyCode === 38 ? 'top' : 'bottom'
         return this.replaceTodos(direction)
       }
+
+      // k
+      if (e.keyCode === 75) return this.focusPrev()
+      // j
+      if (e.keyCode === 74) return this.focusNext()
     }
   }
 }
