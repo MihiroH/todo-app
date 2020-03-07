@@ -1,7 +1,8 @@
 <template lang="pug">
 div#app
-  TheClock
-  TheTodo
+  div(:class="$style.wrap")
+    TheClock
+    TheTodo
 </template>
 
 <script>
@@ -17,6 +18,11 @@ export default {
 }
 
 </script>
+
+<style lang="stylus" module>
+.wrap
+  width 100vw
+</style>
 
 <style lang="stylus">
 html, body, div, span, applet, object, iframe,
@@ -78,4 +84,5 @@ body
   -moz-osx-font-smoothing grayscale
   color #fff
   min-width 800px
+  overflow hidden
 </style>
