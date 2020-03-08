@@ -40,13 +40,6 @@ export default {
       }
     }
   },
-  created() {
-    const self = this
-    setInterval((function moment() {
-      self.moment = self.getMoment()
-      return moment
-    })(), 1000);
-  },
   computed: {
     getNumber() {
       return index => {
@@ -66,6 +59,13 @@ export default {
         return Number(number)
       }
     }
+  },
+  created() {
+    const self = this
+    setInterval((function moment() {
+      self.moment = self.getMoment()
+      return moment
+    })(), 1000);
   },
   methods: {
     getMoment() {
