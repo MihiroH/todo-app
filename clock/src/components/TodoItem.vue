@@ -75,13 +75,16 @@ export default {
     },
     endEdit() {
       this.editModeFlg = false
+      this.$el.focus()
     },
     removeTodo() {
       if (this.editMode) return
       this.REMOVE_TODO(this.uid)
+      this.$emit('todo-removed')
     },
     completeTodo() {
       this.REMOVE_TODO(this.uid)
+      this.$emit('todo-removed')
     },
     toggleChecked() {
       this.isChecked = !this.isChecked

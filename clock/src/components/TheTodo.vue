@@ -20,12 +20,13 @@ div(:class="$style.wrap")
     :class="$style.list"
   )
     TodoItem(
-      v-for="todo in getTodos"
+      v-for="(todo, index) in getTodos"
       :key="todo.id"
       :class="$style.listItem"
       :task="todo.todo"
       :uid="todo.id"
       tabindex="0"
+      @todo-removed="autoFocusTodoByIndex(index)"
     )
 </template>
 
@@ -90,6 +91,15 @@ export default {
         $prevEl: $activeEl.previousElementSibling,
         $nextEl: $activeEl.nextElementSibling
       }
+    },
+    autoFocusTodoByIndex(index) {
+      const todos = this.todoList.children
+      let targetIndex = index + 1
+
+      if (todos.length === 1) return
+      if (todos.length - 1 <= index) targetIndex = index - 1
+
+      todos[targetIndex].focus()
     },
     focusPrev() {
       if (this.notExistsTodo) return
