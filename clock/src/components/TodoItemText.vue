@@ -1,5 +1,8 @@
 <template lang="pug">
-div(:class="$style.wrap")
+div(
+  :class="$style.wrap"
+  @dblclick="handleDoubleClick"
+)
   BaseCheckbox(
     :isChecked="isChecked"
     :class="$style.checkbox"
@@ -49,6 +52,9 @@ export default {
     },
     removeTodo() {
       this.$emit('trash_can-icon-click')
+    },
+    handleDoubleClick() {
+      this.$emit('item-doubleclick')
     },
     handleClickCheckbox() {
       this.$emit('checkbox-click')

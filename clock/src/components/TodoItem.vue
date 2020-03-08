@@ -22,6 +22,7 @@ li(
     :task="task"
     :isChecked="isChecked"
     :class="$style.txt"
+    @item-doubleclick="edit"
     @edit-icon-click="edit"
     @trash_can-icon-click="removeTodo"
     @checkbox-click="toggleChecked"
