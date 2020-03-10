@@ -32,8 +32,7 @@ div(:class="$style.wrap")
       v-for="(todo, index) in getTodosByStatus"
       :key="todo.id"
       :class="$style.listItem"
-      :task="todo.todo"
-      :uid="todo.id"
+      :todoObj="todo"
       tabindex="0"
       @todo-removed="autoFocusTodoByIndex(index)"
     )
@@ -88,7 +87,12 @@ export default {
       const todo = {
         id: getUniqueStr(),
         todo: text,
-        status: ''
+        status: 'todo',
+        workingTimer: {
+          seconds: 0,
+          minutes: 0,
+          hours: 0
+        }
       }
       this.ADD_TODO(todo)
       this.$el.querySelector(`.${this.$style.input}`).focus()

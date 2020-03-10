@@ -5,27 +5,29 @@ li(
   @keyup.delete="removeTodo"
   @keydown="handleKeydown"
 )
-  div(:class="$style.timerbox")
-    div(:class="$style.timerboxTimer") {{ todoTimer  }}
+  div(:class="classNameTimerbox")
+    div {{ todoTimer  }}
     div(
-      :class="[$style.timerboxBtn, { [$style['is-active']]: startTimerFlg }]"
+      v-if="todoObj.status === 'todo'"
+      :class="classNameTimerboxBtn"
       @click="toggleTimer"
     )
   TodoItemInputSet(
-    v-if="!task"
-    :uid="uid"
-    :task="task"
+    v-if="!todoObj.todo"
+    :uid="todoObj.id"
+    :task="todoObj.todo"
     @input-end="endEdit"
   )
   TodoItemInputSave(
     v-else-if="editMode"
-    :uid="uid"
-    :task="task"
+    :uid="todoObj.id"
+    :task="todoObj.todo"
     @input-end="endEdit"
   )
   TodoItemText(
     v-else
-    :task="task"
+    :task="todoObj.todo"
+    :status="todoObj.status"
     :isChecked="isChecked"
     :class="$style.txt"
     @item-doubleclick="edit"
@@ -50,12 +52,8 @@ export default {
     TodoItemText
   },
   props: {
-    uid: {
-      type: String,
-      required: true
-    },
-    task: {
-      type: String,
+    todoObj: {
+      type: Object,
       required: true
     }
   },
@@ -77,11 +75,31 @@ export default {
     },
     editMode() {
       if (this.editModeFlg) return true
-      if (this.task) return false
+      if (this.todoObj.todo) return false
       return true
+    },
+    classNameTimerbox() {
+      return [
+        this.$style.timerbox,
+        {
+          [this.$style['is-active']]: this.todoObj.status === 'completed'
+        }
+      ]
+    },
+    classNameTimerboxBtn() {
+      return [
+        this.$style.timerboxBtn,
+        {
+          [this.$style['is-active']]: this.startTimerFlg
+        }
+      ]
     }
   },
   created() {
+    const workingTimer = this.todoObj.workingTimer
+    this.todoTimerSeconds = workingTimer.seconds
+    this.todoTimerMinutes = workingTimer.minutes
+    this.todoTimerHours = workingTimer.hours
   },
   methods: {
     ...mapMutations('todos', [
@@ -97,14 +115,19 @@ export default {
     },
     removeTodo() {
       if (this.editMode) return
-      this.REMOVE_TODO(this.uid)
+      this.REMOVE_TODO(this.todoObj.id)
       this.$emit('todo-removed')
     },
     completeTodo() {
       this.EDIT_TODO({
-        id: this.uid,
+        id: this.todoObj.id,
         params: {
-          status: 'completed'
+          status: 'completed',
+          workingTimer: {
+            seconds: this.todoTimerSeconds,
+            minutes: this.todoTimerMinutes,
+            hours: this.todoTimerHours
+          }
         }
       })
     },
@@ -112,7 +135,7 @@ export default {
       if (!this.startTimerFlg) return
 
       this.EDIT_TODO({
-        id: this.uid,
+        id: this.todoObj.id,
         params: {
           workingTimer: {
             seconds: this.todoTimerSeconds,
@@ -188,6 +211,8 @@ export default {
   display flex
   align-items center
   font-size 14px
+  &.is-active
+    right calc(100% + 8px)
 .timerboxBtn
   color #111
   background #9acd32

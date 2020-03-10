@@ -4,6 +4,7 @@ div(
   @dblclick="handleDoubleClick"
 )
   BaseCheckbox(
+    v-if="status === 'todo'"
     :isChecked="isChecked"
     :class="$style.checkbox"
     @checkbox-click="handleClickCheckbox"
@@ -38,6 +39,10 @@ export default {
   },
   props: {
     task: {
+      type: String,
+      required: true
+    },
+    status: {
       type: String,
       required: true
     },
