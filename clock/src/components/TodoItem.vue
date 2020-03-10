@@ -106,7 +106,6 @@ export default {
         todo: this.task,
         status: 'completed'
       })
-      this.$emit('todo-removed')
     },
     toggleChecked() {
       this.isChecked = !this.isChecked
