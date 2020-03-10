@@ -103,8 +103,23 @@ export default {
     completeTodo() {
       this.EDIT_TODO({
         id: this.uid,
-        todo: this.task,
-        status: 'completed'
+        params: {
+          status: 'completed'
+        }
+      })
+    },
+    saveTodo() {
+      if (!this.startTimerFlg) return
+
+      this.EDIT_TODO({
+        id: this.uid,
+        params: {
+          workingTimer: {
+            seconds: this.todoTimerSeconds,
+            minutes: this.todoTimerMinutes,
+            hours: this.todoTimerHours
+          }
+        }
       })
     },
     toggleChecked() {

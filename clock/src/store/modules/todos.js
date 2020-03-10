@@ -31,7 +31,9 @@ const mutations = {
     // 速度改善: https://qiita.com/akumachan/items/2ed3ecfc648707689cb7
     for (let i = 0; i < length; i = (i+1) | 0) {
       if (todos[i].id !== payload.id) continue
-      todos.splice(i, 1, payload)
+
+      const newTodo = Object.assign({}, todos[i], payload.params)
+      todos.splice(i, 1, newTodo)
       break
     }
   },

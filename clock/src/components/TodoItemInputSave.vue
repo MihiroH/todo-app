@@ -43,7 +43,9 @@ export default {
       if (this.value) {
         this.EDIT_TODO({
           id: this.uid,
-          todo: this.value
+          params: {
+            todo: this.value
+          }
         })
       } else {
         this.value = this.task

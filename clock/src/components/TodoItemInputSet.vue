@@ -45,7 +45,9 @@ export default {
 
       this.EDIT_TODO({
         id: this.uid,
-        todo: this.value
+        params: {
+          todo: this.value
+        }
       })
 
       this.$emit('input-end')
