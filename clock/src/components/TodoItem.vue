@@ -85,6 +85,7 @@ export default {
   },
   methods: {
     ...mapMutations('todos', [
+      'EDIT_TODO',
       'REMOVE_TODO'
     ]),
     edit() {
@@ -100,7 +101,11 @@ export default {
       this.$emit('todo-removed')
     },
     completeTodo() {
-      this.REMOVE_TODO(this.uid)
+      this.EDIT_TODO({
+        id: this.uid,
+        todo: this.task,
+        status: 'completed'
+      })
       this.$emit('todo-removed')
     },
     toggleChecked() {

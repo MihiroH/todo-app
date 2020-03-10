@@ -2,12 +2,19 @@ import storageAvailable from '@/utils/storageAvailable'
 
 const state = {
   todos: [],
+  selectedStatus: '',
   loading: false
 }
 
 const getters = {
   getTodos: ({ todos }) => {
     return todos
+  },
+  getTodosByStatus: ({ todos, selectedStatus }) => {
+    if (selectedStatus === 'completed') {
+      return todos.filter(todo => todo.status === 'completed')
+    }
+    return todos.filter(todo => todo.status !== 'completed')
   }
 }
 
@@ -38,6 +45,9 @@ const mutations = {
 
     state.todos.splice(prevIndex, 1)
     state.todos.splice(nextIndex, 0, prevTodo)
+  },
+  UPDATE_SELECTED_STATUS(state, payload) {
+    state.selectedStatus = payload
   },
   UPDATE_LOADING_FLG(state, payload) {
     state.loading = payload

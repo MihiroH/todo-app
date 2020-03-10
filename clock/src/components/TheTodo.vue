@@ -14,13 +14,22 @@ div(:class="$style.wrap")
       :class="$style.btn"
       @click="addTodo(text)"
     ) 追加
+  ul(:class="$style.statusList")
+    li(
+      :class="[$style.status, { [$style['is-active']]: status === 'todo' } ]"
+      @click="switchStatus('todo')"
+    ) todo
+    li(
+      :class="[$style.status, { [$style['is-active']]: status === 'completed' } ]"
+      @click="switchStatus('completed')"
+    ) completed
   transition-group(
     tag="ul"
     name="todoItem"
     :class="$style.list"
   )
     TodoItem(
-      v-for="(todo, index) in getTodos"
+      v-for="(todo, index) in getTodosByStatus"
       :key="todo.id"
       :class="$style.listItem"
       :task="todo.todo"
@@ -44,12 +53,13 @@ export default {
   },
   data() {
     return {
-      text: ''
+      text: '',
+      status: 'todo'
     }
   },
   computed: {
     ...mapGetters('todos', [
-      'getTodos'
+      'getTodosByStatus'
     ]),
     todoList() {
       return this.$el.getElementsByClassName(`${this.$style.list}`)[0]
@@ -67,6 +77,7 @@ export default {
   },
   methods: {
     ...mapMutations('todos', [
+      'UPDATE_SELECTED_STATUS',
       'ADD_TODO',
       'REPLACE_TODOS'
     ]),
@@ -76,7 +87,8 @@ export default {
     addTodo(text) {
       const todo = {
         id: getUniqueStr(),
-        todo: text
+        todo: text,
+        status: ''
       }
       this.ADD_TODO(todo)
       this.$el.querySelector(`.${this.$style.input}`).focus()
@@ -144,6 +156,10 @@ export default {
       setTimeout(() => [
         activeEl.$current.focus()
       ], 100)
+    },
+    switchStatus(status) {
+      this.status = status
+      this.UPDATE_SELECTED_STATUS(status)
     },
     handleKeypress() {
       const self = this
@@ -274,6 +290,19 @@ export default {
   width 80px
   &:hover
     cursor pointer
+.statusList
+  text-align center
+  margin 20px 0
+  display flex
+  justify-content center
+  align-items center
+  .status
+    padding 5px
+    background-color transparent
+    color #fff
+    font-size 14px
+    &.is-active
+      background #9acd32
 .list
   margin 50px auto 0
   width 498px
