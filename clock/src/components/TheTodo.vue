@@ -155,6 +155,7 @@ export default {
       if (nextIndex > this.todoList.children.length) return
 
       this.REPLACE_TODOS({ prevIndex, nextIndex, direction })
+      console.log(prevIndex, nextIndex, direction)
 
       // vuexのstoreが更新されるのを待ってからfocus
       setTimeout(() => [
@@ -233,7 +234,7 @@ export default {
 
 .wrap
   color #9acd32
-  padding 50px
+  padding 30px
 .title
   font-size 52px
   font-weight bold
@@ -304,11 +305,14 @@ export default {
     padding 5px
     background-color transparent
     color #fff
-    font-size 14px
+    font-size 16px
+    font-weight bold
+    width 249px
+    border-bottom 2px solid #9acd32
     &.is-active
       background #9acd32
 .list
-  margin 50px auto 0
+  margin 40px auto 0
   width 498px
   position relative
 .listItem

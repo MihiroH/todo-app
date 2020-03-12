@@ -1,7 +1,7 @@
 <template lang="pug">
 div#app
   div(:class="$style.wrap")
-    TheClock
+    TheClock(:class="$style.clock")
     TheTodo
 </template>
 
@@ -22,6 +22,12 @@ export default {
 <style lang="stylus" module>
 .wrap
   width 100vw
+.clock
+  transform translate(35%, -35%) scale(.3)
+  position fixed
+  right 16px
+  top 16px
+  z-index 10
 </style>
 
 <style lang="stylus">

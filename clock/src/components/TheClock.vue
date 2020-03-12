@@ -85,7 +85,6 @@ export default {
   filter drop-shadow(10px 10px 10px rgba(0,0,0,0.6))
   display flex
   justify-content center
-  padding 50px
 .item
   margin-right 15px
 .separation
