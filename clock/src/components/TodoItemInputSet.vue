@@ -18,15 +18,15 @@ export default {
     TodoItemInput
   },
   props: {
-    status: {
-      type: String,
-      required: true
-    },
     uid: {
       type: String,
       required: true
     },
     task: {
+      type: String,
+      required: true
+    },
+    status: {
       type: String,
       required: true
     }

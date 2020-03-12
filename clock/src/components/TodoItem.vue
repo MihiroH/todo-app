@@ -16,6 +16,7 @@ li(
     v-if="!todoObj.todo"
     :uid="todoObj.id"
     :task="todoObj.todo"
+    :status="'todo'"
     @input-end="endEdit"
   )
   TodoItemInputSave(
