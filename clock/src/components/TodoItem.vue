@@ -64,7 +64,6 @@ export default {
       isChecked: false,
       waitTimerId: null,
       todoTimerId: null,
-      startTimerFlg: false,
       todoTimerSeconds: 0,
       todoTimerMinutes: 0,
       todoTimerHours: 0
@@ -91,9 +90,18 @@ export default {
       return [
         this.$style.timerboxBtn,
         {
-          [this.$style['is-active']]: this.startTimerFlg
+          [this.$style['is-active']]: this.todoObj.startTimerFlg
         }
       ]
+    }
+  },
+  watch: {
+    classNameTimerboxBtn: {
+      handler: function () {
+        if (this.todoObj.startTimerFlg) return this.startTimer()
+        this.stopTimer()
+      },
+      immediate: true
     }
   },
   created() {
@@ -106,7 +114,8 @@ export default {
     ...mapMutations('todos', [
       'ADD_TODO',
       'EDIT_TODO',
-      'REMOVE_TODO'
+      'REMOVE_TODO',
+      'TOGGLE_TODO_LIST_TIMER'
     ]),
     edit() {
       this.editModeFlg = true
@@ -133,6 +142,7 @@ export default {
         id: todo.id,
         todo: todo.todo,
         status: 'done',
+        startTimerFlg: false,
         workingTimer: {
           seconds: this.todoTimerSeconds,
           minutes: this.todoTimerMinutes,
@@ -141,7 +151,7 @@ export default {
       })
     },
     saveTodo() {
-      if (!this.startTimerFlg) return
+      if (!this.todoObj.startTimerFlg) return
 
       this.EDIT_TODO({
         id: this.todoObj.id,
@@ -178,12 +188,7 @@ export default {
       clearInterval(this.todoTimerId)
     },
     toggleTimer() {
-      if (this.startTimerFlg) {
-        this.startTimerFlg = false
-        return this.stopTimer()
-      }
-      this.startTimerFlg = true
-      return this.startTimer()
+      this.TOGGLE_TODO_LIST_TIMER(this.todoObj.id)
     },
     wait(delay, callback) {
       if (this.waitTimerId) {

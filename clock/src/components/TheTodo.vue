@@ -5,6 +5,7 @@ div(:class="$style.wrap")
     input(
       v-model="text"
       :class="$style.input"
+      :disabled="getSelectedStatus === 'done'"
       data-tag="input"
       placeholder="New Todo"
       @keydown="handleKeydownInput"
@@ -12,6 +13,7 @@ div(:class="$style.wrap")
     button(
       type="button"
       :class="$style.btn"
+      :disabled="getSelectedStatus === 'done'"
       @click="addTodo(text)"
     ) 追加
   ul(:class="$style.statusList")
@@ -58,7 +60,8 @@ export default {
   },
   computed: {
     ...mapGetters('todos', [
-      'getTodosByStatus'
+      'getTodosByStatus',
+      'getSelectedStatus'
     ]),
     todoList() {
       return this.$el.getElementsByClassName(`${this.$style.list}`)[0]
@@ -88,6 +91,7 @@ export default {
         id: getUniqueStr(),
         todo: text,
         status: 'todo',
+        startTimerFlg: false,
         workingTimer: {
           seconds: 0,
           minutes: 0,
@@ -211,12 +215,14 @@ export default {
         return this.replaceTodos(direction)
       }
 
-      // n
-      if(e.keyCode === 78) return this.addTodo('')
       // k
       if (e.keyCode === 75) return this.focusPrev()
       // j
       if (e.keyCode === 74) return this.focusNext()
+
+      if (this.getSelectedStatus !== 'todo') return
+      // n
+      if(e.keyCode === 78) return this.addTodo('')
     }
   }
 }
@@ -283,6 +289,15 @@ export default {
       transform scale(.8)
       width @height
       z-index -1
+  &:disabled
+    color #888
+    border-color rgba(#9acd32, .5)
+    &::placeholder
+      color #888
+    &:after
+      display none
+    &:hover
+      cursor default
 .input
   padding 0 16px
   width 400px

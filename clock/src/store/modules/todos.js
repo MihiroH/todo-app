@@ -16,6 +16,9 @@ const getters = {
   getTodosByStatus: ({ todos, selectedStatus }) => {
     if (selectedStatus === 'done') return todos.doneList
     return todos.todoList
+  },
+  getSelectedStatus: ({ selectedStatus }) => {
+    return selectedStatus
   }
 }
 
@@ -57,6 +60,20 @@ const mutations = {
 
     const target = targetObj[payload.status]
     state.todos[target] = state.todos[target].filter(todo => todo.id !== payload.id)
+  },
+  TOGGLE_TODO_LIST_TIMER(state, payload) {
+    const array = state.todos.todoList.map(todo => {
+      let flg = false
+      if (todo.id === payload) {
+        flg = !todo.startTimerFlg
+      }
+      return {
+        ...todo,
+        startTimerFlg: flg
+      }
+    })
+
+    return state.todos.todoList = array
   },
   REPLACE_TODOS(state, payload) {
     const prevIndex = payload.prevIndex
@@ -100,6 +117,7 @@ export const pluginTodos = store => {
       'todos/ADD_TODO',
       'todos/EDIT_TODO',
       'todos/REMOVE_TODO',
+      'todos/TOGGLE_TODO_LIST_TIMER',
       'todos/REPLACE_TODOS'
     ]
     types.forEach(type => {

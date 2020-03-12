@@ -12,6 +12,7 @@ div(
   p(:class="$style.txt") {{ task }}
   div(:class="$style.icons")
     div(
+      v-if="status === 'todo'"
       :class="$style.icon"
       @click="edit"
     )
