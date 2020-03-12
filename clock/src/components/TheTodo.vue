@@ -155,7 +155,6 @@ export default {
       if (nextIndex > this.todoList.children.length) return
 
       this.REPLACE_TODOS({ prevIndex, nextIndex, direction })
-      console.log(prevIndex, nextIndex, direction)
 
       // vuexのstoreが更新されるのを待ってからfocus
       setTimeout(() => [
