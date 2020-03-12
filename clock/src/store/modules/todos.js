@@ -5,7 +5,7 @@ const state = {
     todoList: [],
     doneList: []
   },
-  selectedStatus: '',
+  selectedStatus: 'todo',
   loading: false
 }
 

@@ -43,7 +43,7 @@ import TodoItemInputSave from '@/components/TodoItemInputSave'
 import TodoItemInputSet from '@/components/TodoItemInputSet'
 import TodoItemText from '@/components/TodoItemText'
 
-import { mapMutations } from 'vuex'
+import { mapGetters, mapMutations } from 'vuex'
 
 export default {
   name: 'TodoItem',
@@ -70,6 +70,9 @@ export default {
     }
   },
   computed: {
+    ...mapGetters('todos', [
+      'getSelectedStatus'
+    ]),
     todoTimer() {
       return `${this.todoTimerHours}:${this.todoTimerMinutes}:${this.todoTimerSeconds}`
     },
@@ -93,12 +96,15 @@ export default {
           [this.$style['is-active']]: this.todoObj.startTimerFlg
         }
       ]
+    },
+    startTimerFlg() {
+      return this.todoObj.startTimerFlg
     }
   },
   watch: {
-    classNameTimerboxBtn: {
-      handler: function () {
-        if (this.todoObj.startTimerFlg) return this.startTimer()
+    startTimerFlg: {
+      handler: function (value) {
+        if (value) return this.startTimer()
         this.stopTimer()
       },
       immediate: true
@@ -204,9 +210,11 @@ export default {
     handleKeydown(e) {
       // Windows Ctrl キー or Mac Command キー + . の判定
       // https://hacknote.jp/archives/7321/
+      if (this.getSelectedStatus !== 'todo') return
       if (e.ctrlKey && e.metaKey) return
       if (!e.ctrlKey && !e.metaKey) return
       if (e.keyCode === 190) return this.toggleChecked()
+      if (e.keyCode === 84) return this.toggleTimer()
     }
   }
 }
