@@ -20,9 +20,9 @@ div(:class="$style.wrap")
       @click="switchStatus('todo')"
     ) todo
     li(
-      :class="[$style.status, { [$style['is-active']]: status === 'completed' } ]"
-      @click="switchStatus('completed')"
-    ) completed
+      :class="[$style.status, { [$style['is-active']]: status === 'done' } ]"
+      @click="switchStatus('done')"
+    ) done
   transition-group(
     tag="ul"
     name="todoItem"

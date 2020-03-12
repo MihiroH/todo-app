@@ -82,7 +82,7 @@ export default {
       return [
         this.$style.timerbox,
         {
-          [this.$style['is-active']]: this.todoObj.status === 'completed'
+          [this.$style['is-active']]: this.todoObj.status === 'done'
         }
       ]
     },
@@ -103,6 +103,7 @@ export default {
   },
   methods: {
     ...mapMutations('todos', [
+      'ADD_TODO',
       'EDIT_TODO',
       'REMOVE_TODO'
     ]),
@@ -115,19 +116,26 @@ export default {
     },
     removeTodo() {
       if (this.editMode) return
-      this.REMOVE_TODO(this.todoObj.id)
+      this.REMOVE_TODO({
+        status: this.todoObj.status,
+        id: this.todoObj.id
+      })
       this.$emit('todo-removed')
     },
     completeTodo() {
-      this.EDIT_TODO({
-        id: this.todoObj.id,
-        params: {
-          status: 'completed',
-          workingTimer: {
-            seconds: this.todoTimerSeconds,
-            minutes: this.todoTimerMinutes,
-            hours: this.todoTimerHours
-          }
+      const todo = this.todoObj
+      this.REMOVE_TODO({
+        status: 'todo',
+        id: todo.id
+      })
+      this.ADD_TODO({
+        id: todo.id,
+        todo: todo.todo,
+        status: 'done',
+        workingTimer: {
+          seconds: this.todoTimerSeconds,
+          minutes: this.todoTimerMinutes,
+          hours: this.todoTimerHours
         }
       })
     },

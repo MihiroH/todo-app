@@ -18,6 +18,10 @@ export default {
     TodoItemInput
   },
   props: {
+    status: {
+      type: String,
+      required: true
+    },
     uid: {
       type: String,
       required: true
@@ -41,7 +45,12 @@ export default {
       this.value = newValue
     },
     setTodo() {
-      if (!this.value) return this.REMOVE_TODO(this.uid)
+      if (!this.value) {
+        return this.REMOVE_TODO({
+          status: this.status,
+          id: this.uid
+        })
+      }
 
       this.EDIT_TODO({
         id: this.uid,

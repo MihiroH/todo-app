@@ -1,7 +1,10 @@
 import storageAvailable from '@/utils/storageAvailable'
 
 const state = {
-  todos: [],
+  todos: {
+    todoList: [],
+    doneList: []
+  },
   selectedStatus: '',
   loading: false
 }
@@ -11,22 +14,30 @@ const getters = {
     return todos
   },
   getTodosByStatus: ({ todos, selectedStatus }) => {
-    if (selectedStatus === 'completed') {
-      return todos.filter(todo => todo.status === 'completed')
-    }
-    return todos.filter(todo => todo.status !== 'completed')
+    if (selectedStatus === 'done') return todos.doneList
+    return todos.todoList
   }
 }
 
 const mutations = {
-  UPDATE_TODOS(state, payload) {
-    state.todos = payload
+  INIT_TODOS(state, payload) {
+    for (const key of Object.keys(payload)) {
+      if (!state.todos.hasOwnProperty(key)) continue
+      state.todos[key] = payload[key]
+    }
   },
   ADD_TODO(state, payload) {
-    state.todos.push(payload)
+    const targetObj = {
+      todo: 'todoList',
+      done: 'doneList'
+    }
+    if (!targetObj.hasOwnProperty(payload.status)) return
+
+    const target = targetObj[payload.status]
+    state.todos[target].push(payload)
   },
   EDIT_TODO(state, payload) {
-    const todos = state.todos
+    const todos = state.todos.todoList
     const length = todos.length
     // 速度改善: https://qiita.com/akumachan/items/2ed3ecfc648707689cb7
     for (let i = 0; i < length; i = (i+1) | 0) {
@@ -38,15 +49,22 @@ const mutations = {
     }
   },
   REMOVE_TODO(state, payload) {
-    state.todos = state.todos.filter(todo => todo.id !== payload)
+    const targetObj = {
+      todo: 'todoList',
+      done: 'doneList'
+    }
+    if (!targetObj.hasOwnProperty(payload.status)) return
+
+    const target = targetObj[payload.status]
+    state.todos[target] = state.todos[target].filter(todo => todo.id !== payload.id)
   },
   REPLACE_TODOS(state, payload) {
     const prevIndex = payload.prevIndex
     const nextIndex = payload.nextIndex
-    const prevTodo = state.todos[prevIndex]
+    const prevTodo = state.todos.todoList[prevIndex]
 
-    state.todos.splice(prevIndex, 1)
-    state.todos.splice(nextIndex, 0, prevTodo)
+    state.todos.todoList.splice(prevIndex, 1)
+    state.todos.todoList.splice(nextIndex, 0, prevTodo)
   },
   UPDATE_SELECTED_STATUS(state, payload) {
     state.selectedStatus = payload
@@ -65,7 +83,7 @@ const actions = {
     commit('UPDATE_LOADING_FLG', true)
 
     const todos = JSON.parse(localStorage.getItem('todos')) || []
-    commit('UPDATE_TODOS', todos)
+    commit('INIT_TODOS', todos)
 
     commit('UPDATE_LOADING_FLG', false)
   }
