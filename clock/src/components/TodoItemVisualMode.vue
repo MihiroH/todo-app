@@ -34,7 +34,7 @@ div(
 import BaseCheckbox from '@/components/BaseCheckbox'
 
 export default {
-  name: 'TodoItem',
+  name: 'TodoItemVisualMode',
   components: {
     BaseCheckbox
   },

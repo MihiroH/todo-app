@@ -2,19 +2,18 @@
 div(:class="$style.wrap")
   h1(:class="$style.title") Todo
   div(:class="$style.form")
-    input(
+    BaseInput(
       v-model="text"
-      :class="$style.input"
       :disabled="getSelectedStatus === 'done'"
-      data-tag="input"
+      :class="$style.input"
       placeholder="New Todo"
-      @keydown="handleKeydownInput"
+      @shortcut_key-meta-enter="checkValueAndAddTodo(text)"
     )
     button(
       type="button"
       :class="$style.btn"
       :disabled="getSelectedStatus === 'done'"
-      @click="addTodo(text)"
+      @click="checkValueAndAddTodo(text)"
     ) 追加
   ul(:class="$style.statusList")
     li(
@@ -41,6 +40,7 @@ div(:class="$style.wrap")
 </template>
 
 <script>
+import BaseInput from '@/components/BaseInput'
 import TodoItem from '@/components/TodoItem'
 
 import { mapGetters, mapActions, mapMutations } from 'vuex'
@@ -50,7 +50,8 @@ import getUniqueStr from '@/utils/getUniqueStr'
 export default {
   name: 'TheTodo',
   components: {
-    TodoItem,
+    BaseInput,
+    TodoItem
   },
   data() {
     return {
@@ -101,6 +102,10 @@ export default {
       this.ADD_TODO(todo)
       this.$el.querySelector(`.${this.$style.input}`).focus()
       this.text = ''
+    },
+    checkValueAndAddTodo(value) {
+      if (!value) return
+      this.addTodo(value)
     },
     activeElement() {
       const $activeEl = document.activeElement
@@ -199,13 +204,6 @@ export default {
         document.removeEventListener('keydown', shortcutKey);
         document.removeEventListener('keyup', removeKeyStatus);
       })
-    },
-    handleKeydownInput(e) {
-      // Windows Ctrl キー or Mac Command キー + enter の判定
-      // https://hacknote.jp/archives/7321/
-      if (e.ctrlKey && e.metaKey) return
-      if (!e.ctrlKey && !e.metaKey) return
-      if (e.keyCode === 13) return this.addTodo(this.text)
     },
     shortcutKeyMulti(e) {
       // ↑, ↓

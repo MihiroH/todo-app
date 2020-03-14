@@ -12,20 +12,20 @@ li(
       :class="classNameTimerboxBtn"
       @click="toggleTimer"
     )
-  TodoItemInputSet(
+  TodoItemSet(
     v-if="!todoObj.todo"
     :uid="todoObj.id"
     :task="todoObj.todo"
     :status="'todo'"
     @input-end="endEdit"
   )
-  TodoItemInputSave(
+  TodoItemInsertMode(
     v-else-if="editMode"
     :uid="todoObj.id"
     :task="todoObj.todo"
     @input-end="endEdit"
   )
-  TodoItemText(
+  TodoItemVisualMode(
     v-else
     :task="todoObj.todo"
     :status="todoObj.status"
@@ -39,18 +39,18 @@ li(
 </template>
 
 <script>
-import TodoItemInputSave from '@/components/TodoItemInputSave'
-import TodoItemInputSet from '@/components/TodoItemInputSet'
-import TodoItemText from '@/components/TodoItemText'
+import TodoItemInsertMode from '@/components/TodoItemInsertMode'
+import TodoItemSet from '@/components/TodoItemSet'
+import TodoItemVisualMode from '@/components/TodoItemVisualMode'
 
 import { mapGetters, mapMutations } from 'vuex'
 
 export default {
   name: 'TodoItem',
   components: {
-    TodoItemInputSave,
-    TodoItemInputSet,
-    TodoItemText
+    TodoItemInsertMode,
+    TodoItemSet,
+    TodoItemVisualMode
   },
   props: {
     todoObj: {
@@ -138,7 +138,7 @@ export default {
       })
       this.$emit('todo-removed')
     },
-    completeTodo() {
+    doneTodo() {
       const todo = this.todoObj
       this.REMOVE_TODO({
         status: 'todo',
@@ -172,7 +172,7 @@ export default {
     },
     toggleChecked() {
       this.isChecked = !this.isChecked
-      this.wait(1500, this.completeTodo)
+      this.wait(1500, this.doneTodo)
     },
     startTimer() {
       const self = this
@@ -213,7 +213,9 @@ export default {
       if (this.getSelectedStatus !== 'todo') return
       if (e.ctrlKey && e.metaKey) return
       if (!e.ctrlKey && !e.metaKey) return
+      // .
       if (e.keyCode === 190) return this.toggleChecked()
+      // t
       if (e.keyCode === 84) return this.toggleTimer()
     }
   }

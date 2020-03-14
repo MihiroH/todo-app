@@ -1,63 +1,43 @@
 <template lang="pug">
-input(
+BaseInput(
   type="text"
-  v-model="value"
-  :class="$style.todoInput"
-  data-tag="input"
+  :value="task"
+  :class="$style.wrap"
   @input="handleInput"
-  @blur="end"
-  @keyup.esc="end"
-  @keydown="handleKeydown"
+  @input-end="end"
+  @shortcut_key-meta-enter="end"
 )
 </template>
 
 <script>
+import BaseInput from '@/components/BaseInput'
+
 export default {
   name: 'TodoItemInput',
+  components: {
+    BaseInput
+  },
   props: {
-    uid: {
-      type: String,
-      required: true
-    },
     task: {
       type: String,
       required: true
     }
   },
-  data() {
-    return {
-      value: ''
-    }
-  },
   mounted() {
-    this.value = this.task
     this.$el.focus()
   },
   methods: {
     end() {
       this.$emit('input-end')
     },
-    handleInput() {
-      this.$emit('input', this.value)
-    },
-    handleKeydown(e) {
-      if (e.ctrlKey && e.metaKey) return
-      if (!e.ctrlKey && !e.metaKey) return
-      if (e.keyCode === 13) return this.end()
+    handleInput(newValue) {
+      this.$emit('input', newValue)
     }
   }
 }
 </script>
 
 <style lang="stylus" module>
-.todoInput
-  border none
-  background transparent
-  padding 4px
-  padding-left 0
-  outline none
-  font inherit
-  color inherit
-  display block
-  width 100%
+.wrap
+  padding 4px 4px 4px 0
 </style>

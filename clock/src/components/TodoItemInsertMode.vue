@@ -1,9 +1,9 @@
 <template lang="pug">
 TodoItemInput(
-  :uid="uid"
   :task="task"
   @input="updateValue"
-  @input-end="setTodo"
+  @input-end="saveEdit"
+  @shortcut_key-meta-enter="saveEdit"
 )
 </template>
 
@@ -13,7 +13,7 @@ import TodoItemInput from '@/components/TodoItemInput'
 import { mapMutations } from 'vuex'
 
 export default {
-  name: 'TodoItemInputSet',
+  name: 'TodoItemInsertMode',
   components: {
     TodoItemInput
   },
@@ -25,10 +25,6 @@ export default {
     task: {
       type: String,
       required: true
-    },
-    status: {
-      type: String,
-      required: true
     }
   },
   data() {
@@ -38,44 +34,25 @@ export default {
   },
   methods: {
     ...mapMutations('todos', [
-      'EDIT_TODO',
-      'REMOVE_TODO'
+      'EDIT_TODO'
     ]),
     updateValue(newValue) {
       this.value = newValue
     },
-    setTodo() {
-      if (!this.value) {
-        return this.REMOVE_TODO({
-          status: this.status,
-          id: this.uid
+    saveEdit() {
+      if (this.value) {
+        this.EDIT_TODO({
+          id: this.uid,
+          params: {
+            todo: this.value
+          }
         })
+      } else {
+        this.value = this.task
       }
-
-      this.EDIT_TODO({
-        id: this.uid,
-        params: {
-          todo: this.value
-        }
-      })
 
       this.$emit('input-end')
     }
   }
 }
 </script>
-
-<style lang="stylus" module>
-.todoInput
-  border none
-  background transparent
-  padding 4px
-  padding-left 0
-  outline none
-  font inherit
-  color inherit
-  display block
-  width 100%
-</style>
-
-

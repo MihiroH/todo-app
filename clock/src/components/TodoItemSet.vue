@@ -1,9 +1,9 @@
 <template lang="pug">
 TodoItemInput(
-  :uid="uid"
   :task="task"
   @input="updateValue"
-  @input-end="saveEdit"
+  @input-end="setTodo"
+  @shortcut_key-meta-enter="setTodo"
 )
 </template>
 
@@ -13,7 +13,7 @@ import TodoItemInput from '@/components/TodoItemInput'
 import { mapMutations } from 'vuex'
 
 export default {
-  name: 'TodoItemInputSave',
+  name: 'TodoItemSet',
   components: {
     TodoItemInput
   },
@@ -25,6 +25,10 @@ export default {
     task: {
       type: String,
       required: true
+    },
+    status: {
+      type: String,
+      required: true
     }
   },
   data() {
@@ -34,25 +38,31 @@ export default {
   },
   methods: {
     ...mapMutations('todos', [
-      'EDIT_TODO'
+      'EDIT_TODO',
+      'REMOVE_TODO'
     ]),
     updateValue(newValue) {
       this.value = newValue
     },
-    saveEdit() {
-      if (this.value) {
-        this.EDIT_TODO({
-          id: this.uid,
-          params: {
-            todo: this.value
-          }
+    setTodo() {
+      if (!this.value) {
+        this.REMOVE_TODO({
+          status: this.status,
+          id: this.uid
         })
-      } else {
-        this.value = this.task
+        return
       }
+
+      this.EDIT_TODO({
+        id: this.uid,
+        params: {
+          todo: this.value
+        }
+      })
 
       this.$emit('input-end')
     }
   }
 }
 </script>
+
