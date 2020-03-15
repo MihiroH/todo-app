@@ -2,13 +2,21 @@
 div(:class="$style.wrap")
   h1(:class="$style.title") Todo
   div(:class="$style.form")
-    BaseInput(
-      v-model="text"
-      :disabled="getSelectedStatus === 'done'"
-      :class="$style.input"
-      placeholder="New Todo"
-      @shortcut_key-meta-enter="checkValueAndAddTodo(text)"
-    )
+    //- BaseInput(
+      //- v-model="text"
+      //- :disabled="getSelectedStatus === 'done'"
+      //- :class="$style.input"
+      //- placeholder="New Todo"
+      //- @shortcut_key-meta-enter="checkValueAndAddTodo(text)"
+    //- )
+    //- button(
+      //- type="button"
+      //- :class="$style.btn"
+      //- :disabled="getSelectedStatus === 'done'"
+      //- @click="checkValueAndAddTodo(text)"
+    //- ) 追加
+  div(:class="$style.form")
+    InputSuggest(:class="$style.input")
     button(
       type="button"
       :class="$style.btn"
@@ -41,6 +49,7 @@ div(:class="$style.wrap")
 
 <script>
 import BaseInput from '@/components/BaseInput'
+import InputSuggest from '@/components/InputSuggest'
 import TodoItem from '@/components/TodoItem'
 
 import { mapGetters, mapActions, mapMutations } from 'vuex'
@@ -51,6 +60,7 @@ export default {
   name: 'TheTodo',
   components: {
     BaseInput,
+    InputSuggest,
     TodoItem
   },
   data() {
