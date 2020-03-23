@@ -2,27 +2,28 @@
 div(:class="$style.wrap")
   h1(:class="$style.title") Todo
   div(:class="$style.form")
-    //- BaseInput(
-      //- v-model="text"
-      //- :disabled="getSelectedStatus === 'done'"
-      //- :class="$style.input"
-      //- placeholder="New Todo"
-      //- @shortcut_key-meta-enter="checkValueAndAddTodo(text)"
-    //- )
-    //- button(
-      //- type="button"
-      //- :class="$style.btn"
-      //- :disabled="getSelectedStatus === 'done'"
-      //- @click="checkValueAndAddTodo(text)"
-    //- ) 追加
-  div(:class="$style.form")
-    InputSuggest(:class="$style.input")
+    div(:class="$style.inputWrap")
+      BaseInput(
+        v-model="text"
+        :disabled="getSelectedStatus === 'done'"
+        :class="[$style.input, { [$style['is-active']]: isVisible }]"
+        placeholder="New Todo"
+        @input="checkValue(text)"
+        @shortcut_key-meta-enter="checkValueAndAddTodo(text)"
+      )
+      SuggestionResultList(
+        v-if="isVisible"
+        :class="$style.suggestionList"
+        :resultList="suggestionDateList"
+        @suggestion-selected="updateText"
+      )
     button(
       type="button"
       :class="$style.btn"
       :disabled="getSelectedStatus === 'done'"
       @click="checkValueAndAddTodo(text)"
     ) 追加
+    //- InputSuggestDate(:class="$style.input")
   ul(:class="$style.statusList")
     li(
       :class="[$style.status, { [$style['is-active']]: status === 'todo' } ]"
@@ -49,24 +50,30 @@ div(:class="$style.wrap")
 
 <script>
 import BaseInput from '@/components/BaseInput'
-import InputSuggest from '@/components/InputSuggest'
+import SuggestionResultList from '@/components/SuggestionResultList'
+import InputSuggestDate from '@/components/InputSuggestDate'
 import TodoItem from '@/components/TodoItem'
 
 import { mapGetters, mapActions, mapMutations } from 'vuex'
 
 import getUniqueStr from '@/utils/getUniqueStr'
+import { guessDateFromTo } from '@/utils/guessDateFromTo'
 
 export default {
   name: 'TheTodo',
   components: {
     BaseInput,
-    InputSuggest,
+    InputSuggestDate,
+    SuggestionResultList,
     TodoItem
   },
   data() {
     return {
       text: '',
-      status: 'todo'
+      isVisible: false,
+      status: 'todo',
+      fromDateList: [],
+      toDateList: []
     }
   },
   computed: {
@@ -80,7 +87,13 @@ export default {
     notExistsTodo() {
       if (this.todoList.children.length === 0) return true
       return false
-    }
+    },
+    suggestionDateList() {
+      return [
+        ...this.fromDateList,
+        ...this.toDateList
+      ]
+    },
   },
   created() {
     this.fetchTodos()
@@ -97,6 +110,9 @@ export default {
     ...mapActions('todos', [
       'fetchTodos'
     ]),
+    updateText(value) {
+      this.text = this.value
+    },
     addTodo(text) {
       const todo = {
         id: getUniqueStr(),
@@ -154,8 +170,8 @@ export default {
       const activeEl = this.activeElement()
       const $listItemFirstChild = this.todoList.firstElementChild
 
-      if (activeEl.attrData === 'input') return
-      if (activeEl.attrData === 'body') return $listItemFirstChild.focus()
+      if (activeEl.tagName === 'input') return
+      if (activeEl.tagName === 'body') return $listItemFirstChild.focus()
       if (!activeEl.$nextEl) return $listItemFirstChild.focus()
       activeEl.$nextEl.focus()
     },
@@ -183,6 +199,30 @@ export default {
     switchStatus(status) {
       this.status = status
       this.UPDATE_SELECTED_STATUS(status)
+    },
+    openSuggestionList() {
+      if (this.isVisible) return
+
+      this.isVisible = true
+    },
+    closeSuggestionList() {
+      this.isVisible = false
+    },
+    checkValue(value) {
+      if (/from |to /g.test(value)) {
+        this.openSuggestionList()
+        this.startGuess(value)
+        return
+      }
+      this.closeSuggestionList()
+    },
+    startGuess(value) {
+      if (/from /g.test(value)) {
+        this.fromDateList = guessDateFromTo('from', value.split('from ')[1])
+      }
+      if (/to /g.test(value)) {
+        this.toDateList = guessDateFromTo('to', value.split('to ')[1])
+      }
     },
     handleKeypress() {
       const self = this
@@ -216,6 +256,9 @@ export default {
       })
     },
     shortcutKeyMulti(e) {
+      const activeEl = this.activeElement()
+      if (activeEl.tagName === 'input') return
+
       // ↑, ↓
       const keyCodeArrow = [38, 40]
       if (keyCodeArrow.includes(e.keyCode)) {
@@ -254,7 +297,9 @@ export default {
   text-align center
 .form
   margin 20px auto 0
-  text-align center
+  display flex
+  align-items center
+  justify-content center
 .input,
 .btn
   appearance none
@@ -262,10 +307,36 @@ export default {
   border 2px solid #9acd32
   border-radius 25px
   color #fff
-  display inline-block
   font-size 16px
   height 45px
-  vertical-align middle
+  &:disabled
+    color #888
+    border-color rgba(#9acd32, .5)
+    &::placeholder
+      color #888
+    &:after
+      display none
+    &:hover
+      cursor default
+.inputWrap
+  position relative
+.input
+  padding 0 16px
+  width 400px
+  &::placeholder
+    color #fff
+    font-size 16px
+  &.is-active
+    border-bottom-left-radius initial
+    border-bottom-right-radius @border-bottom-left-radius
+.suggestionList
+  border-bottom-left-radius 25px
+  border-bottom-right-radius @border-bottom-left-radius
+.btn
+  margin-left 18px
+  width 80px
+  &:hover
+    cursor pointer
   &:focus
     outline none
     position relative
@@ -297,26 +368,6 @@ export default {
       transform scale(.8)
       width @height
       z-index -1
-  &:disabled
-    color #888
-    border-color rgba(#9acd32, .5)
-    &::placeholder
-      color #888
-    &:after
-      display none
-    &:hover
-      cursor default
-.input
-  padding 0 16px
-  width 400px
-  &::placeholder
-    color #fff
-    font-size 16px
-.btn
-  margin-left 18px
-  width 80px
-  &:hover
-    cursor pointer
 .statusList
   text-align center
   margin 20px 0

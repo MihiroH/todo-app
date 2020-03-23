@@ -36,18 +36,25 @@ li(
     @trash_can-icon-click="removeTodo"
     @checkbox-click="toggleChecked"
   )
+  SuggestionDateList(
+    v-if="isVisible"
+    :class="suggestList"
+  )
 </template>
 
 <script>
+import SuggestionResultList from '@/components/SuggestionResultList'
 import TodoItemInsertMode from '@/components/TodoItemInsertMode'
 import TodoItemSet from '@/components/TodoItemSet'
 import TodoItemVisualMode from '@/components/TodoItemVisualMode'
 
 import { mapGetters, mapMutations } from 'vuex'
+import { guessDateFromTo } from '@/utils/guessDateFromTo'
 
 export default {
   name: 'TodoItem',
   components: {
+    SuggestionResultList,
     TodoItemInsertMode,
     TodoItemSet,
     TodoItemVisualMode
@@ -62,11 +69,14 @@ export default {
     return {
       editModeFlg: false,
       isChecked: false,
+      isVisible: false,
       waitTimerId: null,
       todoTimerId: null,
       todoTimerSeconds: 0,
       todoTimerMinutes: 0,
-      todoTimerHours: 0
+      todoTimerHours: 0,
+      fromDateList: [],
+      toDateList: []
     }
   },
   computed: {
@@ -99,7 +109,13 @@ export default {
     },
     startTimerFlg() {
       return this.todoObj.startTimerFlg
-    }
+    },
+    suggestionDateList() {
+      return [
+        ...this.fromDateList,
+        ...this.toDateList
+      ]
+    },
   },
   watch: {
     startTimerFlg: {
@@ -207,6 +223,30 @@ export default {
         callback()
       }, delay)
     },
+    openSuggestionList() {
+      if (this.isVisible) return
+
+      this.isVisible = true
+    },
+    closeSuggestionList() {
+      this.isVisible = false
+    },
+    checkValue(value) {
+      if (/from |to /g.test(value)) {
+        this.openSuggestionList()
+        this.startGuess(value)
+        return
+      }
+      this.closeSuggestionList()
+    },
+    startGuess(value) {
+      if (/from /g.test(value)) {
+        this.fromDateList = guessDateFromTo('from', value.split('from ')[1])
+      }
+      if (/to /g.test(value)) {
+        this.toDateList = guessDateFromTo('to', value.split('to ')[1])
+      }
+    },
     handleKeydown(e) {
       // Windows Ctrl キー or Mac Command キー + . の判定
       // https://hacknote.jp/archives/7321/
@@ -248,4 +288,7 @@ export default {
     cursor pointer
   &.is-active
     background #DF5656
+.suggestList
+  border-bottom-left-radius 25px
+  border-bottom-right-radius @border-bottom-left-radius
 </style>
