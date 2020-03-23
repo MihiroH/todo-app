@@ -15,7 +15,7 @@ div(:class="$style.wrap")
         v-if="isVisible"
         :class="$style.suggestionList"
         :resultList="suggestionDateList"
-        @suggestion-selected="updateText"
+        @suggestion-selected="handleSelectSuggestion"
       )
     button(
       type="button"
@@ -73,7 +73,9 @@ export default {
       isVisible: false,
       status: 'todo',
       fromDateList: [],
-      toDateList: []
+      toDateList: [],
+      currentFromDate: '',
+      currentToDate: ''
     }
   },
   computed: {
@@ -129,6 +131,23 @@ export default {
       this.text = words
     },
     addTodo(text) {
+      const fromDateList = this.fromDateList
+      const toDateList = this.toDateList
+      let fromDate = {}
+      let toDate = {}
+
+      if (this.currentFromDate) {
+        fromDate = fromDateList.filter(date => {
+          return date.textContent === this.currentFromDate
+        })[0].dateObj
+      }
+
+      if (this.currentToDate) {
+        toDate = toDateList.filter(date => {
+          return date.textContent === this.currentToDate
+        })[0].dateObj
+      }
+
       const todo = {
         id: getUniqueStr(),
         todo: text,
@@ -138,8 +157,13 @@ export default {
           seconds: 0,
           minutes: 0,
           hours: 0
+        },
+        date: {
+          fromDate,
+          toDate
         }
       }
+
       this.ADD_TODO(todo)
       this.$el.querySelector(`.${this.$style.input}`).focus()
       this.text = ''
@@ -239,6 +263,16 @@ export default {
       }
       if (/to /g.test(value)) {
         this.toDateList = suggestDateFromTo('to', value.split('to ')[1])
+      }
+    },
+    handleSelectSuggestion(selected) {
+      this.updateText(selected)
+
+      if (selected.label === 'from') {
+        this.currentFromDate = selected.textContent
+      }
+      if (selected.label === 'to') {
+        this.currentToDate = selected.textContent
       }
     },
     handleKeypress() {

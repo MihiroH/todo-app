@@ -22,7 +22,8 @@ const guess = {
         textContent: this.formatDate(dateObj),
         label: preposition,
         supplement: this.getDate(dateObj).dayOfWeek,
-        invalid: !dateObj.valid
+        invalid: !dateObj.valid,
+        dateObj: dateObj
       }
       resultList.push(formatObj)
     })
@@ -32,7 +33,8 @@ const guess = {
       textContent: this.formatDate(today),
       label: preposition,
       supplement: this.getToday().dayOfWeek,
-      invalid: false
+      invalid: false,
+      dateObj: today
     }
 
     return resultList.length ? resultList : [todayObj]
@@ -256,3 +258,5 @@ export const suggestDateFromTo = (preposition, value) => {
   const list = guess.init.call(guess, preposition, value)
   return list
 }
+export const getToday = () => guess.getToday()
+export const getDate = date => guess.getDate.call(guess, date)
