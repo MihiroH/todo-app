@@ -43,6 +43,7 @@ export default {
     ]),
     updateValue(newValue) {
       this.value = newValue
+      this.$emit('input', newValue)
     },
     setTodo() {
       if (!this.value) {

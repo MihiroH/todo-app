@@ -38,6 +38,7 @@ export default {
     ]),
     updateValue(newValue) {
       this.value = newValue
+      this.$emit('input', newValue)
     },
     saveEdit() {
       if (this.value) {

@@ -252,7 +252,7 @@ const guess = {
   }
 }
 
-export const guessDateFromTo = (preposition, value) => {
+export const suggestDateFromTo = (preposition, value) => {
   const list = guess.init.call(guess, preposition, value)
   return list
 }

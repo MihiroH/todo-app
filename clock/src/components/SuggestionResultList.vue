@@ -4,8 +4,6 @@ ul(:class="$style.wrap")
     v-for="(result, index) in resultList"
     :key="index"
     :class="classNameItem(result, index)"
-    data-tag="exception"
-    tabindex="0"
   ) {{ result.textContent }}
     span(:class="$style.label") {{ result.label }}
     span(:class="$style.supplement") {{ result.supplement }}
@@ -56,8 +54,12 @@ export default {
     },
     focusPrev() {
       if (this.notExistsResult) return
-      if (!this.selectedIndex) {
+      if (this.selectedIndex === -1) {
         this.selectedIndex = this.resultList.length - 1
+        return
+      }
+      if (this.selectedIndex === 0) {
+        this.selectedIndex = -1
         return
       }
 
@@ -67,7 +69,7 @@ export default {
     focusNext() {
       if (this.notExistsResult) return
       if (this.selectedIndex === this.resultList.length - 1) {
-        this.selectedIndex = 0
+        this.selectedIndex = -1
         return
       }
 

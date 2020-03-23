@@ -15,19 +15,23 @@ li(
   TodoItemSet(
     v-if="!todoObj.todo"
     :uid="todoObj.id"
-    :task="todoObj.todo"
+    :task="todoText"
     :status="'todo'"
+    :class="$style.input"
+    @input="checkValue"
     @input-end="endEdit"
   )
   TodoItemInsertMode(
     v-else-if="editMode"
     :uid="todoObj.id"
-    :task="todoObj.todo"
+    :task="todoText"
+    :class="$style.input"
+    @input="checkValue"
     @input-end="endEdit"
   )
   TodoItemVisualMode(
     v-else
-    :task="todoObj.todo"
+    :task="todoText"
     :status="todoObj.status"
     :isChecked="isChecked"
     :class="$style.txt"
@@ -36,9 +40,11 @@ li(
     @trash_can-icon-click="removeTodo"
     @checkbox-click="toggleChecked"
   )
-  SuggestionDateList(
+  SuggestionResultList(
     v-if="isVisible"
-    :class="suggestList"
+    :class="$style.suggestList"
+    :resultList="suggestionDateList"
+    @suggestion-selected="updateText"
   )
 </template>
 
@@ -49,7 +55,7 @@ import TodoItemSet from '@/components/TodoItemSet'
 import TodoItemVisualMode from '@/components/TodoItemVisualMode'
 
 import { mapGetters, mapMutations } from 'vuex'
-import { guessDateFromTo } from '@/utils/guessDateFromTo'
+import { suggestDateFromTo } from '@/utils/suggestDateFromTo'
 
 export default {
   name: 'TodoItem',
@@ -67,6 +73,7 @@ export default {
   },
   data() {
     return {
+      text: '',
       editModeFlg: false,
       isChecked: false,
       isVisible: false,
@@ -83,6 +90,10 @@ export default {
     ...mapGetters('todos', [
       'getSelectedStatus'
     ]),
+    todoText() {
+      if (this.text) return this.text
+      return this.todoObj.todo
+    },
     todoTimer() {
       return `${this.todoTimerHours}:${this.todoTimerMinutes}:${this.todoTimerSeconds}`
     },
@@ -115,7 +126,7 @@ export default {
         ...this.fromDateList,
         ...this.toDateList
       ]
-    },
+    }
   },
   watch: {
     startTimerFlg: {
@@ -139,6 +150,24 @@ export default {
       'REMOVE_TODO',
       'TOGGLE_TODO_LIST_TIMER'
     ]),
+    updateText(selected) {
+      const el = this.$el.querySelector(`.${this.$style.input}`)
+      const value = this.text
+      const regex = new RegExp(`${selected.label} ([0-9]| |/)*`)
+      const beforeWords = value.split(regex)[0]
+      const currentWords = value.match(regex)[0]
+      const selectionRange = beforeWords.length + currentWords.length
+
+      el.setSelectionRange(selectionRange, selectionRange)
+
+      const cursorStartPosition = el.selectionStart
+      const afterWords = value.substr(cursorStartPosition, value.length)
+
+      const words = `${beforeWords}${selected.label} ${selected.textContent} ${afterWords}`
+
+      this.closeSuggestionList()
+      this.text = words
+    },
     edit() {
       this.editModeFlg = true
     },
@@ -232,6 +261,7 @@ export default {
       this.isVisible = false
     },
     checkValue(value) {
+      this.text = value
       if (/from |to /g.test(value)) {
         this.openSuggestionList()
         this.startGuess(value)
@@ -241,10 +271,10 @@ export default {
     },
     startGuess(value) {
       if (/from /g.test(value)) {
-        this.fromDateList = guessDateFromTo('from', value.split('from ')[1])
+        this.fromDateList = suggestDateFromTo('from', value.split('from ')[1])
       }
       if (/to /g.test(value)) {
-        this.toDateList = guessDateFromTo('to', value.split('to ')[1])
+        this.toDateList = suggestDateFromTo('to', value.split('to ')[1])
       }
     },
     handleKeydown(e) {
@@ -267,6 +297,8 @@ export default {
   padding 0 8px
   color #fff
   position relative
+.input
+  backgrond inherit
 .timerbox
   position absolute
   top 50%

@@ -57,7 +57,7 @@ import TodoItem from '@/components/TodoItem'
 import { mapGetters, mapActions, mapMutations } from 'vuex'
 
 import getUniqueStr from '@/utils/getUniqueStr'
-import { guessDateFromTo } from '@/utils/guessDateFromTo'
+import { suggestDateFromTo } from '@/utils/suggestDateFromTo'
 
 export default {
   name: 'TheTodo',
@@ -110,8 +110,23 @@ export default {
     ...mapActions('todos', [
       'fetchTodos'
     ]),
-    updateText(value) {
-      this.text = this.value
+    updateText(selected) {
+      const el = this.$el.querySelector(`.${this.$style.input}`)
+      const value = this.text
+      const regex = new RegExp(`${selected.label} ([0-9]| |/)*`)
+      const beforeWords = value.split(regex)[0]
+      const currentWords = value.match(regex)[0]
+      const selectionRange = beforeWords.length + currentWords.length
+
+      el.setSelectionRange(selectionRange, selectionRange)
+
+      const cursorStartPosition = el.selectionStart
+      const afterWords = value.substr(cursorStartPosition, value.length)
+
+      const words = `${beforeWords}${selected.label} ${selected.textContent} ${afterWords}`
+
+      this.closeSuggestionList()
+      this.text = words
     },
     addTodo(text) {
       const todo = {
@@ -217,11 +232,13 @@ export default {
       this.closeSuggestionList()
     },
     startGuess(value) {
+      this.fromDateList = []
+      this.toDateList = []
       if (/from /g.test(value)) {
-        this.fromDateList = guessDateFromTo('from', value.split('from ')[1])
+        this.fromDateList = suggestDateFromTo('from', value.split('from ')[1])
       }
       if (/to /g.test(value)) {
-        this.toDateList = guessDateFromTo('to', value.split('to ')[1])
+        this.toDateList = suggestDateFromTo('to', value.split('to ')[1])
       }
     },
     handleKeypress() {
