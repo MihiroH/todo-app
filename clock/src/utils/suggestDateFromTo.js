@@ -1,4 +1,4 @@
-import getLangByBrowserLang from '@/utils/getLangByBrowserLang'
+import { getLangByBrowserLang } from '@/utils/getLangByBrowserLang'
 
 const guess = {
   init(preposition, value) {
@@ -226,7 +226,7 @@ const guess = {
       valid: true
     }
 
-    if (todayObj.getTime() < targetObj.getTime()) {
+    if (todayObj.getTime() <= targetObj.getTime()) {
       return results
     }
 
@@ -244,7 +244,7 @@ const guess = {
     }
 
     const resultObj = new Date(results.year, results.month, results.date)
-    if (resultObj.getTime() < todayObj.getTime()) {
+    if (resultObj.getTime() <= todayObj.getTime()) {
       results.valid = false
     }
 

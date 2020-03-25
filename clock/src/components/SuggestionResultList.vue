@@ -17,11 +17,15 @@ export default {
     resultList: {
       type: Array,
       required: true
+    },
+    currentText: {
+      type: String,
+      required: true
     }
   },
   data() {
     return {
-      oldResultList: [],
+      oldText: '',
       selectedIndex: -1
     }
   },
@@ -49,6 +53,8 @@ export default {
   },
   methods: {
     updateSelected() {
+      if (this.selectedIndex === -1) return
+
       const selected = this.resultList[this.selectedIndex]
       this.$emit('suggestion-selected', selected)
     },
@@ -63,7 +69,7 @@ export default {
         return
       }
 
-      this.oldResultList = this.resultList
+      this.oldText = this.currentText
       this.selectedIndex--
     },
     focusNext() {
@@ -73,25 +79,28 @@ export default {
         return
       }
 
-      this.oldResultList = this.resultList
+      this.oldText = this.currentText
       this.selectedIndex++
     },
     handleKeypress() {
       // キーが押されたら実行する処理
       const shortcutKey = (e) => {
-        if (this.oldResultList !== this.resultList) {
-          this.selectedIndex = -1
-        }
-
         // Ctrl キー + something
         if (e.ctrlKey) return this.shortcutKeyMulti(e)
         if (e.keyCode === 13) return this.updateSelected()
       }
 
+      const initSelectedIndex = () => {
+        if (this.oldText === this.currentText) return
+        this.selectedIndex = -1
+      }
+
       document.addEventListener('keydown', shortcutKey)
+      document.addEventListener('keyup', initSelectedIndex)
 
       this.$once('hook:beforeDestroy', () => {
         document.removeEventListener('keydown', shortcutKey);
+        document.removeEventListener('keyup', initSelectedIndex)
       })
     },
     shortcutKeyMulti(e) {

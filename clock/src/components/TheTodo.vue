@@ -6,16 +6,17 @@ div(:class="$style.wrap")
       BaseInput(
         v-model="text"
         :disabled="getSelectedStatus === 'done'"
-        :class="[$style.input, { [$style['is-active']]: isVisible }]"
+        :class="[$style.input, { [$style['is-active']]: mixinIsVisibleSuggestionList }]"
         placeholder="New Todo"
-        @input="checkValue(text)"
+        @input="mixinCheckValue(text)"
         @shortcut_key-meta-enter="checkValueAndAddTodo(text)"
       )
       SuggestionResultList(
-        v-if="isVisible"
+        v-if="mixinIsVisibleSuggestionList"
         :class="$style.suggestionList"
-        :resultList="suggestionDateList"
-        @suggestion-selected="handleSelectSuggestion"
+        :currentText="text"
+        :resultList="mixinSuggestionDateList"
+        @suggestion-selected="mixinHandleSelectSuggestion"
       )
     button(
       type="button"
@@ -23,7 +24,6 @@ div(:class="$style.wrap")
       :disabled="getSelectedStatus === 'done'"
       @click="checkValueAndAddTodo(text)"
     ) 追加
-    //- InputSuggestDate(:class="$style.input")
   ul(:class="$style.statusList")
     li(
       :class="[$style.status, { [$style['is-active']]: status === 'todo' } ]"
@@ -55,9 +55,9 @@ import InputSuggestDate from '@/components/InputSuggestDate'
 import TodoItem from '@/components/TodoItem'
 
 import { mapGetters, mapActions, mapMutations } from 'vuex'
+import { mixinSuggestDateFromTo } from '@/mixins/suggestDateFromTo'
 
 import getUniqueStr from '@/utils/getUniqueStr'
-import { suggestDateFromTo } from '@/utils/suggestDateFromTo'
 
 export default {
   name: 'TheTodo',
@@ -67,15 +67,11 @@ export default {
     SuggestionResultList,
     TodoItem
   },
+  mixins: [mixinSuggestDateFromTo],
   data() {
     return {
       text: '',
-      isVisible: false,
-      status: 'todo',
-      fromDateList: [],
-      toDateList: [],
-      currentFromDate: '',
-      currentToDate: ''
+      status: 'todo'
     }
   },
   computed: {
@@ -90,12 +86,13 @@ export default {
       if (this.todoList.children.length === 0) return true
       return false
     },
-    suggestionDateList() {
-      return [
-        ...this.fromDateList,
-        ...this.toDateList
-      ]
-    },
+    taskName() {
+      const regex = new RegExp('(From |To )([0-9]| |/|.)+', 'g')
+      const formatText = this.text.replace(regex, '')
+      const textWithoutTrailingSpaces = formatText.replace(/\s*$/, '')
+
+      return textWithoutTrailingSpaces
+    }
   },
   created() {
     this.fetchTodos()
@@ -112,45 +109,12 @@ export default {
     ...mapActions('todos', [
       'fetchTodos'
     ]),
-    updateText(selected) {
-      const el = this.$el.querySelector(`.${this.$style.input}`)
-      const value = this.text
-      const regex = new RegExp(`${selected.label} ([0-9]| |/)*`)
-      const beforeWords = value.split(regex)[0]
-      const currentWords = value.match(regex)[0]
-      const selectionRange = beforeWords.length + currentWords.length
-
-      el.setSelectionRange(selectionRange, selectionRange)
-
-      const cursorStartPosition = el.selectionStart
-      const afterWords = value.substr(cursorStartPosition, value.length)
-
-      const words = `${beforeWords}${selected.label} ${selected.textContent} ${afterWords}`
-
-      this.closeSuggestionList()
-      this.text = words
-    },
     addTodo(text) {
-      const fromDateList = this.fromDateList
-      const toDateList = this.toDateList
-      let fromDate = {}
-      let toDate = {}
-
-      if (this.currentFromDate) {
-        fromDate = fromDateList.filter(date => {
-          return date.textContent === this.currentFromDate
-        })[0].dateObj
-      }
-
-      if (this.currentToDate) {
-        toDate = toDateList.filter(date => {
-          return date.textContent === this.currentToDate
-        })[0].dateObj
-      }
+      const selectedDateFromTo = this.mixinSelectedDateFromTo(text)
 
       const todo = {
         id: getUniqueStr(),
-        todo: text,
+        todo: this.taskName,
         status: 'todo',
         startTimerFlg: false,
         workingTimer: {
@@ -159,8 +123,8 @@ export default {
           hours: 0
         },
         date: {
-          fromDate,
-          toDate
+          fromDate: selectedDateFromTo.fromDate,
+          toDate: selectedDateFromTo.toDate
         }
       }
 
@@ -170,6 +134,8 @@ export default {
     },
     checkValueAndAddTodo(value) {
       if (!value) return
+      this.mixinCloseSuggestionList()
+
       this.addTodo(value)
     },
     activeElement() {
@@ -238,42 +204,6 @@ export default {
     switchStatus(status) {
       this.status = status
       this.UPDATE_SELECTED_STATUS(status)
-    },
-    openSuggestionList() {
-      if (this.isVisible) return
-
-      this.isVisible = true
-    },
-    closeSuggestionList() {
-      this.isVisible = false
-    },
-    checkValue(value) {
-      if (/from |to /g.test(value)) {
-        this.openSuggestionList()
-        this.startGuess(value)
-        return
-      }
-      this.closeSuggestionList()
-    },
-    startGuess(value) {
-      this.fromDateList = []
-      this.toDateList = []
-      if (/from /g.test(value)) {
-        this.fromDateList = suggestDateFromTo('from', value.split('from ')[1])
-      }
-      if (/to /g.test(value)) {
-        this.toDateList = suggestDateFromTo('to', value.split('to ')[1])
-      }
-    },
-    handleSelectSuggestion(selected) {
-      this.updateText(selected)
-
-      if (selected.label === 'from') {
-        this.currentFromDate = selected.textContent
-      }
-      if (selected.label === 'to') {
-        this.currentToDate = selected.textContent
-      }
     },
     handleKeypress() {
       const self = this

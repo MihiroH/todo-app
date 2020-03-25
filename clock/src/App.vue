@@ -90,5 +90,4 @@ body
   -moz-osx-font-smoothing grayscale
   color #fff
   min-width 800px
-  overflow hidden
 </style>

@@ -41,10 +41,11 @@ li(
     @checkbox-click="toggleChecked"
   )
   SuggestionResultList(
-    v-if="isVisible"
-    :class="$style.suggestList"
-    :resultList="suggestionDateList"
-    @suggestion-selected="updateText"
+    v-if="mixinIsVisibleSuggestionList"
+    :class="$style.suggestionList"
+    :currentText="todoText"
+    :resultList="mixinSuggestionDateList"
+    @suggestion-selected="mixinHandleSelectSuggestion"
   )
 </template>
 
@@ -55,7 +56,7 @@ import TodoItemSet from '@/components/TodoItemSet'
 import TodoItemVisualMode from '@/components/TodoItemVisualMode'
 
 import { mapGetters, mapMutations } from 'vuex'
-import { suggestDateFromTo } from '@/utils/suggestDateFromTo'
+import { mixinSuggestDateFromTo } from '@/mixins/suggestDateFromTo'
 
 export default {
   name: 'TodoItem',
@@ -65,6 +66,7 @@ export default {
     TodoItemSet,
     TodoItemVisualMode
   },
+  mixins: [mixinSuggestDateFromTo],
   props: {
     todoObj: {
       type: Object,
@@ -76,14 +78,11 @@ export default {
       text: '',
       editModeFlg: false,
       isChecked: false,
-      isVisible: false,
       waitTimerId: null,
       todoTimerId: null,
       todoTimerSeconds: 0,
       todoTimerMinutes: 0,
-      todoTimerHours: 0,
-      fromDateList: [],
-      toDateList: []
+      todoTimerHours: 0
     }
   },
   computed: {
@@ -91,8 +90,7 @@ export default {
       'getSelectedStatus'
     ]),
     todoText() {
-      if (this.text) return this.text
-      return this.todoObj.todo
+      return this.text || this.todoObj.todo
     },
     todoTimer() {
       return `${this.todoTimerHours}:${this.todoTimerMinutes}:${this.todoTimerSeconds}`
@@ -120,12 +118,6 @@ export default {
     },
     startTimerFlg() {
       return this.todoObj.startTimerFlg
-    },
-    suggestionDateList() {
-      return [
-        ...this.fromDateList,
-        ...this.toDateList
-      ]
     }
   },
   watch: {
@@ -150,28 +142,14 @@ export default {
       'REMOVE_TODO',
       'TOGGLE_TODO_LIST_TIMER'
     ]),
-    updateText(selected) {
-      const el = this.$el.querySelector(`.${this.$style.input}`)
-      const value = this.text
-      const regex = new RegExp(`${selected.label} ([0-9]| |/)*`)
-      const beforeWords = value.split(regex)[0]
-      const currentWords = value.match(regex)[0]
-      const selectionRange = beforeWords.length + currentWords.length
-
-      el.setSelectionRange(selectionRange, selectionRange)
-
-      const cursorStartPosition = el.selectionStart
-      const afterWords = value.substr(cursorStartPosition, value.length)
-
-      const words = `${beforeWords}${selected.label} ${selected.textContent} ${afterWords}`
-
-      this.closeSuggestionList()
-      this.text = words
-    },
     edit() {
       this.editModeFlg = true
     },
-    endEdit() {
+    endEdit(text) {
+      this.mixinCloseSuggestionList()
+      this.saveTodo(text)
+
+      this.text = text
       this.editModeFlg = false
       this.$el.focus()
     },
@@ -201,9 +179,29 @@ export default {
         }
       })
     },
-    saveTodo() {
-      if (!this.todoObj.startTimerFlg) return
+    saveTodo(text) {
+      const selectedDateFromTo = this.mixinSelectedDateFromTo(text)
+      const fromDate = selectedDateFromTo.fromDate
+      const toDate = selectedDateFromTo.toDate
+      const date = Object.assign({}, this.todoObj.date)
 
+      if (Object.keys(fromDate).length) date.fromDate = fromDate
+      if (Object.keys(toDate).length) date.toDate = toDate
+
+      this.EDIT_TODO({
+        id: this.todoObj.id,
+        params: {
+          todo: text,
+          workingTimer: {
+            seconds: this.todoTimerSeconds,
+            minutes: this.todoTimerMinutes,
+            hours: this.todoTimerHours
+          },
+          date: date
+        }
+      })
+    },
+    saveTodoTimer() {
       this.EDIT_TODO({
         id: this.todoObj.id,
         params: {
@@ -225,6 +223,7 @@ export default {
         if (self.todoTimerSeconds === 59) {
           self.todoTimerSeconds = 0
           self.todoTimerMinutes++
+          this.saveTodoTimer()
         } else {
           self.todoTimerSeconds++
         }
@@ -252,30 +251,9 @@ export default {
         callback()
       }, delay)
     },
-    openSuggestionList() {
-      if (this.isVisible) return
-
-      this.isVisible = true
-    },
-    closeSuggestionList() {
-      this.isVisible = false
-    },
     checkValue(value) {
       this.text = value
-      if (/from |to /g.test(value)) {
-        this.openSuggestionList()
-        this.startGuess(value)
-        return
-      }
-      this.closeSuggestionList()
-    },
-    startGuess(value) {
-      if (/from /g.test(value)) {
-        this.fromDateList = suggestDateFromTo('from', value.split('from ')[1])
-      }
-      if (/to /g.test(value)) {
-        this.toDateList = suggestDateFromTo('to', value.split('to ')[1])
-      }
+      this.mixinCheckValue(value)
     },
     handleKeydown(e) {
       // Windows Ctrl キー or Mac Command キー + . の判定
@@ -320,7 +298,8 @@ export default {
     cursor pointer
   &.is-active
     background #DF5656
-.suggestList
+.suggestionList
+  border-top 2px solid #9acd32
   border-bottom-left-radius 25px
   border-bottom-right-radius @border-bottom-left-radius
 </style>

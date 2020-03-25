@@ -38,7 +38,6 @@ export default {
   },
   methods: {
     ...mapMutations('todos', [
-      'EDIT_TODO',
       'REMOVE_TODO'
     ]),
     updateValue(newValue) {
@@ -54,14 +53,7 @@ export default {
         return
       }
 
-      this.EDIT_TODO({
-        id: this.uid,
-        params: {
-          todo: this.value
-        }
-      })
-
-      this.$emit('input-end')
+      this.$emit('input-end', this.value)
     }
   }
 }

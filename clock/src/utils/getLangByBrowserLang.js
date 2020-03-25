@@ -12,6 +12,6 @@ const convertOriginalLang = lang => {
   return 'en'
 }
 
-const getLangByBrowserLang = () => convertOriginalLang(getBrowserLang())
+const func = () => convertOriginalLang(getBrowserLang())
 
-export default getLangByBrowserLang
+export const getLangByBrowserLang = func

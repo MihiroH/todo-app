@@ -24,7 +24,7 @@ div(:class="[$style.wrap, { [$style['is-active']]: isVisible }]")
 <script>
 import BaseInput from '@/components/BaseInput'
 
-import getLangByBrowserLang from '@/utils/getLangByBrowserLang'
+import { getLangByBrowserLang } from '@/utils/getLangByBrowserLang'
 
 export default {
   name: 'InputSuggest',

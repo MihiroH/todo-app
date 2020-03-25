@@ -10,8 +10,6 @@ TodoItemInput(
 <script>
 import TodoItemInput from '@/components/TodoItemInput'
 
-import { mapMutations } from 'vuex'
-
 export default {
   name: 'TodoItemInsertMode',
   components: {
@@ -27,32 +25,12 @@ export default {
       required: true
     }
   },
-  data() {
-    return {
-      value: ''
-    }
-  },
   methods: {
-    ...mapMutations('todos', [
-      'EDIT_TODO'
-    ]),
     updateValue(newValue) {
-      this.value = newValue
       this.$emit('input', newValue)
     },
     saveEdit() {
-      if (this.value) {
-        this.EDIT_TODO({
-          id: this.uid,
-          params: {
-            todo: this.value
-          }
-        })
-      } else {
-        this.value = this.task
-      }
-
-      this.$emit('input-end')
+      this.$emit('input-end', this.task)
     }
   }
 }
