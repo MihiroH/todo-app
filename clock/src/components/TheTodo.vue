@@ -370,20 +370,18 @@ export default {
   width 498px
   position relative
 .listItem
-  border-bottom 2px solid #9acd32
+  border-bottom 1px solid #9acd32
   position relative
-  display inline-block
   transition .3s
   width 100%
-  margin-bottom 20px
   &:focus
     outline none
-    border-bottom 2px solid #111
+    border-bottom 1px solid #111
     &::after
       position absolute
-      bottom -2px
+      bottom -1px
       left 0
-      height 2px
+      height 1px
       background #9acd32
       width 80px
       content ''

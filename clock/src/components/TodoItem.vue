@@ -1,59 +1,60 @@
 <template lang="pug">
 li(
   :class="$style.wrap"
-  @keyup.exact.enter="edit"
-  @keyup.delete="removeTodo"
-  @keydown="handleKeydown"
+  @keyup.delete.self="removeTodo"
+  @keydown.self="handleKeydown"
 )
-  div(:class="classNameTimerbox")
-    div {{ todoTimer  }}
-    div(
-      v-if="todoObj.status === 'todo'"
-      :class="classNameTimerboxBtn"
-      @click="toggleTimer"
-    )
-  TodoItemSet(
-    v-if="!todoObj.todo"
-    :uid="todoObj.id"
-    :task="todoText"
-    :status="'todo'"
-    :class="$style.input"
-    @input="checkValue"
-    @input-end="endEdit"
-  )
-  TodoItemInsertMode(
-    v-else-if="editMode"
-    :uid="todoObj.id"
-    :task="todoText"
-    :class="$style.input"
-    @input="checkValue"
-    @input-end="endEdit"
-  )
-  TodoItemVisualMode(
-    v-else
-    :task="todoText"
-    :status="todoObj.status"
+  BaseCheckbox(
+    v-if="todoObj.status === 'todo'"
     :isChecked="isChecked"
-    :class="$style.txt"
-    @item-doubleclick="edit"
-    @edit-icon-click="edit"
-    @trash_can-icon-click="removeTodo"
+    :class="$style.checkbox"
     @checkbox-click="toggleChecked"
   )
-  SuggestionResultList(
-    v-if="mixinIsVisibleSuggestionList"
-    :class="$style.suggestionList"
-    :currentText="todoText"
-    :resultList="mixinSuggestionDateList"
-    @suggestion-selected="mixinHandleSelectSuggestion"
-  )
+  div(:class="$style.body")
+    div(:class="$style.primary")
+      InputReadingWriting(
+        :value="todoObj.todo"
+        :class="$style.taskName"
+        @input-end="endEdit"
+      )
+      div(:class="$style.timebox")
+        InputHoursMinutes
+        span 〜
+        InputHoursMinutes
+    div(:class="$style.secondary")
+      ul(:class="$style.iconList")
+        li(
+          v-for="(icon, index) in iconList"
+          :key="index"
+          :class="icon.className"
+          @click="icon.handleClick"
+        )
+          img(
+            :src="require(`@/assets/${icon.img}`)"
+            :alt="icon.alt"
+          )
+      div(:class="classNameTimerbox")
+        div {{ todoTimer  }}
+        span &nbsp;/&nbsp;
+        InputNumberAdvanced(
+          :minValue="1"
+          :maxValue="999"
+          :initializeCount="1"
+          :useZeroPadding="false"
+        )
+        span m
+        div(
+          v-if="todoObj.status === 'todo'"
+          :class="classNameTimerboxBtn"
+          @click="toggleTimer"
+        )
 </template>
 
 <script>
-import SuggestionResultList from '@/components/SuggestionResultList'
-import TodoItemInsertMode from '@/components/TodoItemInsertMode'
-import TodoItemSet from '@/components/TodoItemSet'
-import TodoItemVisualMode from '@/components/TodoItemVisualMode'
+import BaseCheckbox from '@/components/BaseCheckbox'
+import InputHoursMinutes from '@/components/InputHoursMinutes'
+import InputNumberAdvanced from '@/components/InputNumberAdvanced'
+import InputReadingWriting from '@/components/InputReadingWriting'
 
 import { mapGetters, mapMutations } from 'vuex'
 import { mixinSuggestDateFromTo } from '@/mixins/suggestDateFromTo'
@@ -61,10 +62,10 @@ import { mixinSuggestDateFromTo } from '@/mixins/suggestDateFromTo'
 export default {
   name: 'TodoItem',
   components: {
-    SuggestionResultList,
-    TodoItemInsertMode,
-    TodoItemSet,
-    TodoItemVisualMode
+    BaseCheckbox,
+    InputHoursMinutes,
+    InputNumberAdvanced,
+    InputReadingWriting
   },
   mixins: [mixinSuggestDateFromTo],
   props: {
@@ -76,24 +77,39 @@ export default {
   data() {
     return {
       text: '',
-      editModeFlg: false,
       isChecked: false,
       waitTimerId: null,
       todoTimerId: null,
       todoTimerSeconds: 0,
       todoTimerMinutes: 0,
-      todoTimerHours: 0
+      todoTimerHours: 0,
+      iconList: [
+        {
+          className: this.$style.startDate,
+          img: 'icon_calendar.svg',
+          alt: '開始日',
+          handleClick() {
+            alert(1)
+          }
+        },
+        {
+          className: this.$style.dueDate,
+          img: 'icon_flag.svg',
+          alt: '期日',
+          handleClick() {
+            alert(2)
+          }
+        },
+      ]
     }
   },
   computed: {
     ...mapGetters('todos', [
       'getSelectedStatus'
     ]),
-    todoText() {
-      return this.text || this.todoObj.todo
-    },
     todoTimer() {
-      return `${this.todoTimerHours}:${this.todoTimerMinutes}:${this.todoTimerSeconds}`
+      // return `${this.todoTimerHours}:${this.todoTimerMinutes}:${this.todoTimerSeconds}`
+      return '10m'
     },
     editMode() {
       if (this.editModeFlg) return true
@@ -142,15 +158,11 @@ export default {
       'REMOVE_TODO',
       'TOGGLE_TODO_LIST_TIMER'
     ]),
-    edit() {
-      this.editModeFlg = true
+    updateTaskName(newValue) {
+      this.taskName = newValue
     },
     endEdit(text) {
-      this.mixinCloseSuggestionList()
       this.saveTodo(text)
-
-      this.text = text
-      this.editModeFlg = false
       this.$el.focus()
     },
     removeTodo() {
@@ -272,34 +284,66 @@ export default {
 
 <style lang="stylus" module>
 .wrap
-  padding 0 8px
+  padding 10px 6px 3px
   color #fff
-  position relative
-.input
-  backgrond inherit
-.timerbox
+  &:hover,
+  &:focus
+    .iconList
+      opacity 1
+      pointer-events auto
+.checkbox
   position absolute
-  top 50%
-  transform translateY(-50%)
-  right calc(100% + 34px)
+  top 19px
+  left -30px
+.body
+  display flex
+  justify-content space-between
+  align-items flex-end
+.primary
+  width calc(100% - 120px)
+.taskName
+  height 21px
+  line-height 21px
+  font-size 16px
+  padding-left 1px
+  width 100%
+.timebox
+  display flex
+  align-items center
+  font-size 12px
+  letter-spacing .01em
+  margin-top 2px
+  color #d0d0d0
+.timerbox
   display flex
   align-items center
   font-size 14px
+  letter-spacing .05em
+  margin-top 3px
   &.is-active
     right calc(100% + 8px)
 .timerboxBtn
   color #111
   background #9acd32
-  margin-left 10px
-  padding 8px
-  lihe-height 21px
-  border-radius 8px
+  margin-left 8px
+  padding 5px
+  border-radius 100%
   &:hover
     cursor pointer
   &.is-active
     background #DF5656
-.suggestionList
-  border-top 2px solid #9acd32
-  border-bottom-left-radius 25px
-  border-bottom-right-radius @border-bottom-left-radius
+.iconList
+  opacity 0
+  pointer-events none
+  width 100%
+  transition opacity .1s
+  text-align right
+.startDate,
+.dueDate
+  width 15px
+  display inline-block
+  margin-left 12px
+  &:hover
+    cursor pointer
 </style>
+

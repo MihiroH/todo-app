@@ -4,8 +4,8 @@ input(
   type="text"
   :class="$style.wrap"
   data-tag="input"
-  @blur="end"
-  @keyup.esc="end"
+  @blur="handleBlur"
+  @keyup.esc="handleKeyupEsc"
   @keydown="handleKeydown"
 )
 </template>
@@ -30,8 +30,11 @@ export default {
     }
   },
   methods: {
-    end() {
-      this.$emit('input-end')
+    handleBlur() {
+      this.$emit('input-blur')
+    },
+    handleKeyupEsc() {
+      this.$emit('shortcut_key-esc')
     },
     handleKeydown(e) {
       if (e.ctrlKey && e.metaKey) return

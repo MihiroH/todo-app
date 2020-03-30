@@ -85,7 +85,7 @@ body
   background #111
 
 #app
-  font-family -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "ヒラギノ角ゴ ProN W3", Meiryo, "メイリオ", sans-serif
+  font-family -apple-system, "Segoe UI", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "ヒラギノ角ゴ ProN W3", Meiryo, "メイリオ", sans-serif
   -webkit-font-smoothing antialiased
   -moz-osx-font-smoothing grayscale
   color #fff

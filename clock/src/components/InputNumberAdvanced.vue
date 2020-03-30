@@ -2,12 +2,13 @@
 div(
   :class="$style.wrap"
   tabindex="-1"
+  data-tag="input"
   @keydown="hendleKeydown"
-) {{ zeroPadding(value) }}
+) {{ formatValue(value) }}
 </template>
 
 <script>
-import { zeroPadding as $_zeroPadding} from '@/utils/zeroPadding'
+import { zeroPadding } from '@/utils/zeroPadding'
 
 export default {
   name: 'InputNumberAdvanced',
@@ -25,6 +26,17 @@ export default {
       validator(value) {
         return value >= 1
       }
+    },
+    initializeCount: {
+      type: Number,
+      required: true,
+      validator(value) {
+        return value >= 0
+      }
+    },
+    useZeroPadding: {
+      type: Boolean,
+      required: true
     }
   },
   data() {
@@ -35,9 +47,11 @@ export default {
     }
   },
   computed: {
-    zeroPadding() {
+    formatValue() {
       return value => {
-        return $_zeroPadding(value, this.strMaxValue.length)
+        if (this.useZeroPadding) return zeroPadding(value, this.strMaxValue.length)
+
+        return value
       }
     },
     strMinValue() {
@@ -50,6 +64,7 @@ export default {
   mounted() {
     const minValue = this.minValue
     const maxValue = this.maxValue
+    const initializeCount = this.initializeCount
 
     if (minValue === maxValue) {
       console.error('minValueの値がmaxValueの値と同じです')
@@ -59,8 +74,12 @@ export default {
       console.error('minValueの値がmaxValueの値を超えています')
       return
     }
+    if (initializeCount < minValue) {
+      console.error('initializeCountの値がminValueの値より小さいです')
+      return
+    }
 
-    this.value = minValue
+    this.value = this.initializeCount
   },
   methods: {
     initInputHis(value) {
@@ -77,11 +96,13 @@ export default {
       this.value--
     },
     hendleKeydown(e) {
-      const keycode = e.keyCode
-      const char = String.fromCharCode(event.keyCode)
+      const keyCode = e.keyCode
+      const char = String.fromCharCode(keyCode)
 
-      if (keycode === 38) return this.countup()
-      if (keycode === 40) return this.countdown()
+      this.$emit('input-keydown', keyCode)
+
+      if (keyCode === 38) return this.countup()
+      if (keyCode === 40) return this.countdown()
       if (/\D/.test(char)) return
 
       clearTimeout(this.timerId)
@@ -91,14 +112,13 @@ export default {
       }, 800)
 
       this.inputNumberHistory.splice(this.inputCount, 1, char)
-
       let result = this.inputNumberHistory
+
       if (result.join('') > this.maxValue) return
 
       this.inputCount === this.strMaxValue.length - 1
         ? this.inputCount = 0
         : this.inputCount++
-
       this.value = result.join('')
     }
   }
@@ -108,10 +128,10 @@ export default {
 <style lang="stylus" module>
 .wrap
   border-radius 4px
-  padding 1.5px
+  padding 2px 1px
   display inline-block
-  color #fff
   &:focus
     background #4eaad4
     outline none
+    color #fff
 </style>

@@ -44,24 +44,24 @@ export default {
     border-color #111
 
 .wrap
-  width 2px * 4 * 2
+  width 2.5px * 4 * 2
   height @width
   background transparent
-  border 2px solid #9E9E9E
-  border-radius 2px
+  border 1px solid #9E9E9E
+  border-radius 50%
   cursor pointer
   transition all .25s cubic-bezier(.4,.0,.23,1)
   position relative
   &.is-checked
-    border (2px * 4) solid #9acd32
+    border (2.5px * 4) solid #9acd32
     animation shrink-bounce .2s cubic-bezier(.4,.0,.23,1)
     &:before
       content ""
       position absolute
       top 50%
       left 0
-      border-right 2px solid transparent
-      border-bottom 2px solid transparent
+      border-right 1px solid transparent
+      border-bottom 1px solid transparent
       transform translate3d(-90%, -90%, 0) rotate(45deg)
       transform-origin 0% 100%
       animation checkbox-check 125ms 250ms cubic-bezier(.4,.0,.23,1) forwards
