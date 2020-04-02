@@ -22,16 +22,20 @@ li(
         span 〜
         InputHoursMinutes
     div(:class="$style.secondary")
-      ul(:class="$style.iconList")
+      ul(:class="[$style.iconList, {[$style['is-active']]: isVisibleCalendar}]")
         li(
           v-for="(icon, index) in iconList"
           :key="index"
           :class="icon.className"
-          @click="icon.handleClick"
+          @click="toggleVisibleCalendar"
         )
-          img(
-            :src="require(`@/assets/${icon.img}`)"
-            :alt="icon.alt"
+          Calendar(
+            :themeColor="icon.themeColor"
+            :imgSrc="require(`@/assets/${icon.img}`)"
+            :imgAlt="icon.alt"
+            :currentDate="todoObj.date[icon.typeOfDate]"
+            @calendar-set="updateCalendarDate($event, icon.typeOfDate)"
+            @calendar-hidden="toggleVisibleCalendar"
           )
       div(:class="classNameTimerbox")
         div {{ todoTimer  }}
@@ -52,6 +56,7 @@ li(
 
 <script>
 import BaseCheckbox from '@/components/BaseCheckbox'
+import Calendar from '@/components/Calendar'
 import InputHoursMinutes from '@/components/InputHoursMinutes'
 import InputNumberAdvanced from '@/components/InputNumberAdvanced'
 import InputReadingWriting from '@/components/InputReadingWriting'
@@ -63,6 +68,7 @@ export default {
   name: 'TodoItem',
   components: {
     BaseCheckbox,
+    Calendar,
     InputHoursMinutes,
     InputNumberAdvanced,
     InputReadingWriting
@@ -85,22 +91,21 @@ export default {
       todoTimerHours: 0,
       iconList: [
         {
+          typeOfDate: 'fromDate',
           className: this.$style.startDate,
+          themeColor: '#4eaad4',
           img: 'icon_calendar.svg',
-          alt: '開始日',
-          handleClick() {
-            alert(1)
-          }
+          alt: '開始日'
         },
         {
+          typeOfDate: 'toDate',
           className: this.$style.dueDate,
+          themeColor: '#df5656',
           img: 'icon_flag.svg',
-          alt: '期日',
-          handleClick() {
-            alert(2)
-          }
-        },
-      ]
+          alt: '期日'
+        }
+      ],
+      isVisibleCalendar: false
     }
   },
   computed: {
@@ -191,14 +196,12 @@ export default {
         }
       })
     },
-    saveTodo(text) {
-      const selectedDateFromTo = this.mixinSelectedDateFromTo(text)
-      const fromDate = selectedDateFromTo.fromDate
-      const toDate = selectedDateFromTo.toDate
+    saveTodo(text, dateObj) {
       const date = Object.assign({}, this.todoObj.date)
 
-      if (Object.keys(fromDate).length) date.fromDate = fromDate
-      if (Object.keys(toDate).length) date.toDate = toDate
+      if (Object.keys(dateObj).length) {
+        Object.keys(dateObj).forEach(key => date[key] = dateObj[key])
+      }
 
       this.EDIT_TODO({
         id: this.todoObj.id,
@@ -266,6 +269,15 @@ export default {
     checkValue(value) {
       this.text = value
       this.mixinCheckValue(value)
+    },
+    toggleVisibleCalendar() {
+      this.isVisibleCalendar = !this.isVisibleCalendar
+    },
+    updateCalendarDate(newValueObj, typeOfDate) {
+      const dateObj = {}
+      dateObj[typeOfDate] = newValueObj
+
+      this.saveTodo(this.todoObj.todo, dateObj)
     },
     handleKeydown(e) {
       // Windows Ctrl キー or Mac Command キー + . の判定
@@ -338,6 +350,9 @@ export default {
   width 100%
   transition opacity .1s
   text-align right
+  &.is-active
+    opacity 1
+    pointer-events auto
 .startDate,
 .dueDate
   width 15px

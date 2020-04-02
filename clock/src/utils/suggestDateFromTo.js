@@ -1,4 +1,4 @@
-import { getLangByBrowserLang } from '@/utils/getLangByBrowserLang'
+import { getDate, getToday } from '@/utils/getDate'
 
 const guess = {
   init(preposition, value) {
@@ -16,23 +16,23 @@ const guess = {
       if (!Object.keys(dateObj).length) return
 
       dateObj = this.compareWithToday(dateObj)
-      dateObj = Object.assign(dateObj, this.getDate(dateObj))
+      dateObj = Object.assign(dateObj, getDate(dateObj))
 
       const formatObj = {
         textContent: this.formatDate(dateObj),
         label: preposition,
-        supplement: this.getDate(dateObj).dayOfWeek,
+        supplement: getDate(dateObj).dayOfWeek,
         invalid: !dateObj.valid,
         dateObj: dateObj
       }
       resultList.push(formatObj)
     })
 
-    const today = Object.assign({ valid: true }, this.getToday())
+    const today = Object.assign({ valid: true }, getToday())
     const todayObj = {
       textContent: this.formatDate(today),
       label: preposition,
-      supplement: this.getToday().dayOfWeek,
+      supplement: getToday().dayOfWeek,
       invalid: false,
       dateObj: today
     }
@@ -62,30 +62,13 @@ const guess = {
 
     return {}
   },
-  getDate(date) {
-    const _date = date === 'today'
-      ? new Date()
-      : new Date(date.year, date.month - 1, date.date)
-    const dayOfWeekList = getLangByBrowserLang() === 'ja'
-      ? ['日', '月', '火', '水', '木', '金', '土']
-      : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-    return {
-      year: _date.getFullYear(),
-      month: _date.getMonth() + 1,
-      date: _date.getDate(),
-      dayOfWeek: dayOfWeekList[_date.getDay()]
-    }
-  },
-  getToday() {
-    return this.getDate('today')
-  },
   getDateWithMonthAbbreviation(value) {
     const val = value.replace(/(,|\s)+/g, ' ')
     const dateArray = val.split(/\s/, 3)
     const _month = dateArray[0]
     const _date = dateArray[1]
       ? Number(dateArray[1].replace(/(th|st|nd|rd)/, ''))
-      : this.getToday().date
+      : getToday().date
     const _year = Number(dateArray[2])
     const results = {}
 
@@ -124,7 +107,7 @@ const guess = {
     const dateArray = val.split(/\s/, 3)
     const _year = Number(dateArray[0])
     const _month = Number(dateArray[1])
-    const _date = Number(dateArray[2]) || this.getToday().date
+    const _date = Number(dateArray[2]) || getToday().date
 
     if (!this.isYear(_year)) return {}
     if (!this.isMonth(_month)) return {}
@@ -140,7 +123,7 @@ const guess = {
     const val = value.replace(/(\/|\s)+/g, ' ')
     const dateArray = val.split(/\s/, 2)
     const _month = Number(dateArray[0])
-    const _date = Number(dateArray[1]) || this.getToday().date
+    const _date = Number(dateArray[1]) || getToday().date
 
     if (!this.isMonth(_month)) return {}
     if (!this.isDate(_date)) return {}
@@ -209,7 +192,7 @@ const guess = {
   compareWithToday(target) {
     if (!Object.keys(target).length) return {}
 
-    const today = this.getToday()
+    const today = getToday()
     const hasYear = target.hasOwnProperty('year') ? true : false
     const hasMonth = target.hasOwnProperty('month') ? true : false
     const hasDate = target.hasOwnProperty('date') ? true : false
@@ -258,5 +241,3 @@ export const suggestDateFromTo = (preposition, value) => {
   const list = guess.init.call(guess, preposition, value)
   return list
 }
-export const getToday = () => guess.getToday()
-export const getDate = date => guess.getDate.call(guess, date)

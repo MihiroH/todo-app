@@ -66,6 +66,7 @@ export const mixinSuggestDateFromTo = {
           return date.textContent === this.mixinCurrentToDate
         })[0].dateObj
       }
+
       return {
         fromDate,
         toDate

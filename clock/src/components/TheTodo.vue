@@ -111,6 +111,7 @@ export default {
     ]),
     addTodo(text) {
       const selectedDateFromTo = this.mixinSelectedDateFromTo(text)
+      console.log(selectedDateFromTo)
 
       const todo = {
         id: getUniqueStr(),
