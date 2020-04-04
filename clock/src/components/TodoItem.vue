@@ -17,10 +17,6 @@ li(
         :class="$style.taskName"
         @input-end="endEdit"
       )
-      div(:class="$style.timebox")
-        InputHoursMinutes
-        span 〜
-        InputHoursMinutes
     div(:class="$style.secondary")
       ul(:class="[$style.iconList, {[$style['is-active']]: isVisibleCalendar}]")
         li(
