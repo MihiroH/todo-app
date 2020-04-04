@@ -63,13 +63,13 @@ const mutations = {
   },
   TOGGLE_TODO_LIST_TIMER(state, payload) {
     const array = state.todos.todoList.map(todo => {
-      let flg = false
-      if (todo.id === payload) {
-        flg = !todo.startTimerFlg
+      let startTimerFlg = false
+      if (todo.id === payload.id) {
+        startTimerFlg = !payload.startTimerFlg
       }
       return {
         ...todo,
-        startTimerFlg: flg
+        startTimerFlg
       }
     })
 

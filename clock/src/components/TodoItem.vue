@@ -34,7 +34,19 @@ li(
             @calendar-hidden="toggleVisibleCalendar"
           )
       div(:class="classNameTimerbox")
-        div {{ todoTimer  }}
+        div(v-if="todoTimer.minutes === 0")
+          | {{ todoTimer.seconds }}
+          span s
+        div(v-else)
+          InputNumberAdvanced(
+            :minValue="0"
+            :maxValue="999"
+            :initializeCount="todoTimer.minutes"
+            :useZeroPadding="false"
+            @input-countup="updateTimer"
+            @input-countdown="updateTimer"
+          )
+          span m
         span &nbsp;/&nbsp;
         InputNumberAdvanced(
           :minValue="1"
@@ -46,7 +58,7 @@ li(
         div(
           v-if="todoObj.status === 'todo'"
           :class="classNameTimerboxBtn"
-          @click="toggleTimer"
+          @click="toggleTimer(todoObj.startTimerFlg)"
         )
 </template>
 
@@ -82,9 +94,10 @@ export default {
       isChecked: false,
       waitTimerId: null,
       todoTimerId: null,
-      todoTimerSeconds: 0,
-      todoTimerMinutes: 0,
-      todoTimerHours: 0,
+      todoTimer: {
+        seconds: 0,
+        minutes: 0
+      },
       iconList: [
         {
           typeOfDate: 'fromDate',
@@ -108,10 +121,6 @@ export default {
     ...mapGetters('todos', [
       'getSelectedStatus'
     ]),
-    todoTimer() {
-      // return `${this.todoTimerHours}:${this.todoTimerMinutes}:${this.todoTimerSeconds}`
-      return '10m'
-    },
     editMode() {
       if (this.editModeFlg) return true
       if (this.todoObj.todo) return false
@@ -148,9 +157,7 @@ export default {
   },
   created() {
     const workingTimer = this.todoObj.workingTimer
-    this.todoTimerSeconds = workingTimer.seconds
-    this.todoTimerMinutes = workingTimer.minutes
-    this.todoTimerHours = workingTimer.hours
+    this.todoTimer.minutes = workingTimer.minutes
   },
   methods: {
     ...mapMutations('todos', [
@@ -186,9 +193,7 @@ export default {
         status: 'done',
         startTimerFlg: false,
         workingTimer: {
-          seconds: this.todoTimerSeconds,
-          minutes: this.todoTimerMinutes,
-          hours: this.todoTimerHours
+          minutes: this.todoTimer.minutes
         }
       })
     },
@@ -205,8 +210,7 @@ export default {
           todo: text,
           workingTimer: {
             seconds: this.todoTimerSeconds,
-            minutes: this.todoTimerMinutes,
-            hours: this.todoTimerHours
+            minutes: this.todoTimer.minutes
           },
           date: date
         }
@@ -217,9 +221,7 @@ export default {
         id: this.todoObj.id,
         params: {
           workingTimer: {
-            seconds: this.todoTimerSeconds,
-            minutes: this.todoTimerMinutes,
-            hours: this.todoTimerHours
+            minutes: this.todoTimer.minutes
           }
         }
       })
@@ -231,25 +233,29 @@ export default {
     startTimer() {
       const self = this
       this.todoTimerId = setInterval(() => {
-        if (self.todoTimerSeconds === 59) {
-          self.todoTimerSeconds = 0
-          self.todoTimerMinutes++
+        if (self.todoTimer.seconds === 59) {
+          self.todoTimer.seconds = 0
+          self.todoTimer.minutes++
           this.saveTodoTimer()
         } else {
-          self.todoTimerSeconds++
+          self.todoTimer.seconds++
         }
-
-        if (self.todoTimerMinutes === 59) {
-          self.todoTimerMinutes = 0
-          self.todoTimerHours++
-        }
-      }, 1000);
+      }, 1000)
     },
     stopTimer() {
       clearInterval(this.todoTimerId)
     },
-    toggleTimer() {
-      this.TOGGLE_TODO_LIST_TIMER(this.todoObj.id)
+    updateTimer(value) {
+      this.toggleTimer(true)
+      this.todoTimer.minutes = value
+      this.saveTodoTimer()
+    },
+    toggleTimer(startTimerFlg) {
+      const params = {
+        id: this.todoObj.id,
+        startTimerFlg: startTimerFlg
+      }
+      this.TOGGLE_TODO_LIST_TIMER(params)
     },
     wait(delay, callback) {
       if (this.waitTimerId) {
@@ -284,7 +290,7 @@ export default {
       // .
       if (e.keyCode === 190) return this.toggleChecked()
       // t
-      if (e.keyCode === 84) return this.toggleTimer()
+      if (e.keyCode === 84) return this.toggleTimer(this.todoObj.startTimerFlg)
     }
   }
 }
@@ -301,7 +307,7 @@ export default {
       pointer-events auto
 .checkbox
   position absolute
-  top 19px
+  bottom 4px
   left -30px
 .body
   display flex

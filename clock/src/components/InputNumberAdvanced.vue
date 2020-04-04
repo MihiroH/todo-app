@@ -4,7 +4,7 @@ div(
   tabindex="-1"
   data-tag="input"
   @keydown="hendleKeydown"
-) {{ formatValue(value) }}
+) {{ formatValue(currentValue) }}
 </template>
 
 <script>
@@ -59,41 +59,42 @@ export default {
     },
     strMaxValue() {
       return String(this.maxValue)
-    }
-  },
-  mounted() {
-    const minValue = this.minValue
-    const maxValue = this.maxValue
-    const initializeCount = this.initializeCount
+    },
+    currentValue() {
+      const minValue = this.minValue
+      const maxValue = this.maxValue
+      const initializeCount = this.initializeCount
 
-    if (minValue === maxValue) {
-      console.error('minValueの値がmaxValueの値と同じです')
-      return
-    }
-    if (minValue > maxValue) {
-      console.error('minValueの値がmaxValueの値を超えています')
-      return
-    }
-    if (initializeCount < minValue) {
-      console.error('initializeCountの値がminValueの値より小さいです')
-      return
-    }
+      if (minValue === maxValue) {
+        console.error('minValueの値がmaxValueの値と同じです')
+        return 0
+      }
+      if (minValue > maxValue) {
+        console.error('minValueの値がmaxValueの値を超えています')
+        return 0
+      }
+      if (initializeCount < minValue) {
+        console.error('initializeCountの値がminValueの値より小さいです')
+        return 0
+      }
 
-    this.value = this.initializeCount
+      return this.initializeCount
+    }
   },
   methods: {
-    initInputHis(value) {
-      return this.strMaxValue < value
-    },
     countup() {
-      const value = this.value
-      if (value === this.maxValue) return this.value = this.minValue
-      this.value++
+      let result = 0
+      if (this.currentValue === this.maxValue) result = this.minValue
+      else result = this.currentValue + 1
+
+      this.$emit('input-countup', result)
     },
     countdown() {
-      const value = this.value
-      if (value === this.minValue) return this.value = this.maxValue
-      this.value--
+      let result = 0
+      if (this.currentValue === this.minValue) result = this.maxValue
+      else result = this.currentValue - 1
+
+      this.$emit('input-countdown', result)
     },
     hendleKeydown(e) {
       const keyCode = e.keyCode
