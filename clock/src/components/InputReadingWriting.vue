@@ -1,5 +1,8 @@
 <template lang="pug">
-div(:class="$style.wrap")
+div(
+  :class="$style.wrap"
+  @keyup.exact.enter="edit"
+)
   BaseInput(
     v-if="writingMode"
     :value="text"
@@ -29,27 +32,34 @@ export default {
     value: {
       type: String,
       required: true
+    },
+    writingMode: {
+      type: Boolean,
+      required: true
     }
   },
   data() {
     return {
-      writingMode: false,
       text: ''
     }
   },
   mounted() {
     this.text = this.value
   },
+  async updated() {
+    if (!this.writingMode) return false
+
+    await this.$nextTick()
+    this.$el.querySelector(`.${this.$style.input}`).focus()
+  },
   methods: {
     async write() {
-      this.writingMode = true
       this.text = this.value
 
-      await this.$nextTick()
-      this.$el.querySelector(`.${this.$style.input}`).focus()
+      this.$emit('input-dblclick')
     },
     end() {
-      this.writingMode = false
+      this.$emit('input-end')
 
       const newValue = this.text ? this.text : this.value
       this.text = newValue

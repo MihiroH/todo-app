@@ -15,6 +15,7 @@ div
     button(
       type="button"
       :class="[$style.btn, {[$style.isDone]: isDone}]"
+      :disabled="disabled"
     )
       img(
         :src="imgSrc"
@@ -54,34 +55,29 @@ export default {
       type: String,
       required: false
     },
-    currentDate: {
+    dateObj: {
       type: Object,
+      required: true
+    },
+    disabled: {
+      type: Boolean,
       required: true
     }
   },
   data() {
     return {
       formatMinDate: '',
-      isDone: false
+      isDone: false,
+      current: ''
     }
   },
   computed: {
     date: {
       get () {
-        if (Object.keys(this.currentDate).length) {
-          return this.$_getFormatDate(this.currentDate)
-        }
-        return this.$_getFormatDate('today')
+        return this.current
       },
       set (newValue) {
-        const onlyDate = newValue.split(' ')[0]
-        const onlyTime = newValue.split(' ')[1]
-        const susfix = newValue.split(' ')[2]
-        const [year, month, date] = onlyDate.split('-')
-        const [hours, minutes] = onlyTime.split(':')
-
-        const obj = Object.assign(getDate({ year, month, date, hours, minutes }), { susfix })
-        this.$emit('calendar-set', obj)
+        this.current = newValue
       }
     },
     labelBackgroundColor() {
@@ -94,6 +90,13 @@ export default {
     // mountedされてからminDateを設定しないとVueCtkDateTimePicker側でエラーになることがある
     await this.$nextTick()
     this.$_minDate()
+
+    if (Object.keys(this.dateObj).length) {
+      this.current = this.$_getFormatDate(this.dateObj)
+    } else {
+      this.current = this.$_getFormatDate('today')
+    }
+
   },
   methods: {
     $_minDate() {
@@ -114,7 +117,16 @@ export default {
     },
     handleHidden() {
       this.isDone = true
-      this.$emit('calendar-hidden')
+
+      const newValue = this.current
+      const onlyDate = newValue.split(' ')[0]
+      const onlyTime = newValue.split(' ')[1]
+      const susfix = newValue.split(' ')[2]
+      const [year, month, date] = onlyDate.split('-')
+      const [hours, minutes] = onlyTime.split(':')
+      const obj = Object.assign(getDate({ year, month, date, hours, minutes }), { susfix })
+
+      this.$emit('calendar-hidden', obj)
     }
   }
 }
@@ -136,6 +148,8 @@ export default {
       display block
   &:focus
     outline none
+  &:disabled
+    cursor auto
   &.isDone
     animation scale .3s
 .date

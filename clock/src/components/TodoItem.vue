@@ -1,6 +1,7 @@
 <template lang="pug">
 li(
   :class="$style.wrap"
+  @keyup.exact.enter="startWrite"
   @keyup.delete.self="removeTodo"
   @keydown.self="handleKeydown"
 )
@@ -14,8 +15,10 @@ li(
     div(:class="$style.primary")
       InputReadingWriting(
         :value="todoObj.todo"
+        :writingMode="writingMode"
         :class="$style.taskName"
-        @input-end="endEdit"
+        @input-dblclick="startWrite"
+        @input-end="endWrite"
       )
     div(:class="$style.secondary")
       ul(:class="[$style.iconList, {[$style['is-active']]: isVisibleCalendar}]")
@@ -29,32 +32,43 @@ li(
             :themeColor="icon.themeColor"
             :imgSrc="require(`@/assets/${icon.img}`)"
             :imgAlt="icon.alt"
-            :currentDate="todoObj.date[icon.typeOfDate]"
-            @calendar-set="updateCalendarDate($event, icon.typeOfDate)"
-            @calendar-hidden="toggleVisibleCalendar"
+            :dateObj="todoObj.date[icon.typeOfDate]"
+            :disabled="todoObj.status === 'done'"
+            @calendar-hidden="updateCalendar($event, icon.typeOfDate)"
           )
       div(:class="classNameTimerbox")
-        div(v-if="todoTimer.minutes === 0")
-          | {{ todoTimer.seconds }}
+        div(v-if="todoObj.status === 'done'")
+          | {{ workingTime.minutes }}
+          span m
+        div(v-else-if="workingTime.minutes === 0")
+          | {{ workingTime.seconds }}
           span s
         div(v-else)
           InputNumberAdvanced(
             :minValue="0"
             :maxValue="999"
-            :initializeCount="todoTimer.minutes"
+            :initialCount="workingTime.minutes"
             :useZeroPadding="false"
+            @input-change="updateTimer"
             @input-countup="updateTimer"
             @input-countdown="updateTimer"
           )
           span m
         span &nbsp;/&nbsp;
-        InputNumberAdvanced(
-          :minValue="1"
-          :maxValue="999"
-          :initializeCount="1"
-          :useZeroPadding="false"
-        )
-        span m
+        div(v-if="todoObj.status === 'done'")
+          | {{ todoObj.estimatedTime.minutes }}
+          span m
+        div(v-else)
+          InputNumberAdvanced(
+            :minValue="1"
+            :maxValue="999"
+            :initialCount="todoObj.estimatedTime.minutes"
+            :useZeroPadding="false"
+            @input-change="updateEstimatedTime"
+            @input-countup="updateEstimatedTime"
+            @input-countdown="updateEstimatedTime"
+          )
+          span m
         div(
           v-if="todoObj.status === 'todo'"
           :class="classNameTimerboxBtn"
@@ -92,11 +106,15 @@ export default {
     return {
       text: '',
       isChecked: false,
+      writingMode: false,
       waitTimerId: null,
       todoTimerId: null,
-      todoTimer: {
+      workingTime: {
         seconds: 0,
         minutes: 0
+      },
+      estimatedTime: {
+        minutes: 1
       },
       iconList: [
         {
@@ -121,11 +139,6 @@ export default {
     ...mapGetters('todos', [
       'getSelectedStatus'
     ]),
-    editMode() {
-      if (this.editModeFlg) return true
-      if (this.todoObj.todo) return false
-      return true
-    },
     classNameTimerbox() {
       return [
         this.$style.timerbox,
@@ -156,8 +169,9 @@ export default {
     }
   },
   created() {
-    const workingTimer = this.todoObj.workingTimer
-    this.todoTimer.minutes = workingTimer.minutes
+    const todoObj = this.todoObj
+    this.workingTime.minutes = todoObj.workingTime.minutes
+    this.estimatedTime.minutes = todoObj.estimatedTime.minutes
   },
   methods: {
     ...mapMutations('todos', [
@@ -169,12 +183,15 @@ export default {
     updateTaskName(newValue) {
       this.taskName = newValue
     },
-    endEdit(text) {
+    startWrite() {
+      this.writingMode = true
+    },
+    endWrite(text) {
+      this.writingMode = false
       this.saveTodo(text)
       this.$el.focus()
     },
     removeTodo() {
-      if (this.editMode) return
       this.REMOVE_TODO({
         status: this.todoObj.status,
         id: this.todoObj.id
@@ -192,15 +209,15 @@ export default {
         todo: todo.todo,
         status: 'done',
         startTimerFlg: false,
-        workingTimer: {
-          minutes: this.todoTimer.minutes
-        }
+        workingTime: this.workingTime,
+        estimatedTime: this.estimatedTime,
+        date: this.todoObj.date
       })
     },
     saveTodo(text, dateObj) {
       const date = Object.assign({}, this.todoObj.date)
 
-      if (Object.keys(dateObj).length) {
+      if (dateObj && Object.keys(dateObj).length) {
         Object.keys(dateObj).forEach(key => date[key] = dateObj[key])
       }
 
@@ -208,21 +225,9 @@ export default {
         id: this.todoObj.id,
         params: {
           todo: text,
-          workingTimer: {
-            seconds: this.todoTimerSeconds,
-            minutes: this.todoTimer.minutes
-          },
+          workingTime: this.workingTime,
+          estimatedTime: this.estimatedTime,
           date: date
-        }
-      })
-    },
-    saveTodoTimer() {
-      this.EDIT_TODO({
-        id: this.todoObj.id,
-        params: {
-          workingTimer: {
-            minutes: this.todoTimer.minutes
-          }
         }
       })
     },
@@ -231,24 +236,27 @@ export default {
       this.wait(1500, this.doneTodo)
     },
     startTimer() {
-      const self = this
       this.todoTimerId = setInterval(() => {
-        if (self.todoTimer.seconds === 59) {
-          self.todoTimer.seconds = 0
-          self.todoTimer.minutes++
-          this.saveTodoTimer()
+        if (this.workingTime.seconds === 59) {
+          this.workingTime.seconds = 0
+          this.workingTime.minutes++
+          this.saveTodo(this.todoObj.todo)
         } else {
-          self.todoTimer.seconds++
+          this.workingTime.seconds++
         }
       }, 1000)
     },
     stopTimer() {
       clearInterval(this.todoTimerId)
     },
+    updateEstimatedTime(value) {
+      this.estimatedTime.minutes = value
+      this.saveTodo(this.todoObj.todo)
+    },
     updateTimer(value) {
       this.toggleTimer(true)
-      this.todoTimer.minutes = value
-      this.saveTodoTimer()
+      this.workingTime.minutes = value
+      this.saveTodo(this.todoObj.todo)
     },
     toggleTimer(startTimerFlg) {
       const params = {
@@ -275,11 +283,12 @@ export default {
     toggleVisibleCalendar() {
       this.isVisibleCalendar = !this.isVisibleCalendar
     },
-    updateCalendarDate(newValueObj, typeOfDate) {
+    updateCalendar(newValueObj, typeOfDate) {
       const dateObj = {}
       dateObj[typeOfDate] = newValueObj
 
       this.saveTodo(this.todoObj.todo, dateObj)
+      this.toggleVisibleCalendar()
     },
     handleKeydown(e) {
       // Windows Ctrl キー or Mac Command キー + . の判定

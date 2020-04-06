@@ -34,18 +34,32 @@ div(:class="$style.wrap")
       @click="switchStatus('done')"
     ) done
   transition-group(
-    tag="ul"
+    tag="ol"
     name="todoItem"
-    :class="$style.list"
+    :class="$style.groupList"
   )
-    TodoItem(
-      v-for="(todo, index) in getTodosByStatus"
-      :key="todo.id"
-      :class="$style.listItem"
-      :todoObj="todo"
-      tabindex="0"
-      @todo-removed="autoFocusTodoByIndex(index)"
+    li(
+      v-for="(obj, key, index) in sortedGroupByDate"
+      :class="$style.group"
+      :key="key"
     )
+      p(:class="$style.label")
+        span(:class="$style.borderBefore")
+        span(:class="$style.text") {{ key }}
+        span(:class="$style.borderAfter")
+      transition-group(
+        tag="ul"
+        name="todoItem"
+        :class="$style.list"
+      )
+        TodoItem(
+          v-for="(todo, i) in obj"
+          :key="todo.id"
+          :class="$style.listItem"
+          :todoObj="todo"
+          tabindex="0"
+          @todo-removed="autoFocusTodoByIndex"
+        )
 </template>
 
 <script>
@@ -79,6 +93,35 @@ export default {
       'getTodosByStatus',
       'getSelectedStatus'
     ]),
+    sortedGroupByDate() {
+      const result = {}
+      const target = this.groupByDate
+      const array = []
+
+      Object.keys(target).forEach(key => array.push(key))
+
+      array.sort()
+
+      array.forEach(date => result[date] = target[date])
+
+      return result
+    },
+    groupByDate() {
+      const list = this.getTodosByStatus
+      const groupByDate = () => {
+        return list.reduce((acc, obj) => {
+          const fromDate = obj.date.fromDate
+          const key = Object.keys(fromDate).length
+            ? `${fromDate.year}/${fromDate.month}/${fromDate.date}`
+            : 'いつか'
+          if (!acc[key]) acc[key] = []
+          acc[key].push(obj)
+
+          return acc
+        }, {})
+      }
+      return groupByDate()
+    },
     todoList() {
       return this.$el.getElementsByClassName(`${this.$style.list}`)[0]
     },
@@ -111,17 +154,17 @@ export default {
     ]),
     addTodo(text) {
       const selectedDateFromTo = this.mixinSelectedDateFromTo(text)
-      console.log(selectedDateFromTo)
 
       const todo = {
         id: getUniqueStr(),
         todo: this.taskName,
         status: 'todo',
         startTimerFlg: false,
-        workingTimer: {
-          seconds: 0,
-          minutes: 0,
-          hours: 0
+        workingTime: {
+          minutes: 0
+        },
+        estimatedTime: {
+          minutes: 1
         },
         date: {
           fromDate: selectedDateFromTo.fromDate,
@@ -142,43 +185,50 @@ export default {
     activeElement() {
       const $activeEl = document.activeElement
       const attrTag = $activeEl.getAttribute('data-tag')
+      const $listItems = [...this.$el.querySelectorAll(`.${this.$style.listItem}`)]
+      const activeIndex = $listItems.indexOf($activeEl)
+
+      let $prevEl = $listItems[activeIndex - 1]
+      let $nextEl = $listItems[activeIndex + 1]
+
+      if (!$prevEl) $prevEl = $listItems[$listItems.length - 1]
+      if (!$nextEl) $nextEl = $listItems[0]
+
       return {
         tagName: attrTag,
         $current: $activeEl,
-        $prevEl: $activeEl.previousElementSibling,
-        $nextEl: $activeEl.nextElementSibling
+        $prevEl: $prevEl,
+        $nextEl: $nextEl
       }
     },
-    autoFocusTodoByIndex(index) {
-      const todos = this.todoList.children
-      let targetIndex = index + 1
+    autoFocusTodoByIndex() {
+      const activeEl = this.activeElement()
+      const $listItems = [...this.$el.querySelectorAll(`.${this.$style.listItem}`)]
 
-      if (todos.length === 1) return
-      if (todos.length - 1 <= index) targetIndex = index - 1
+      let currentIndex = $listItems.indexOf(activeEl.$current)
 
-      todos[targetIndex].focus()
+      if ($listItems.length === 1) return
+      if ($listItems.length - 1 <= currentIndex) {
+        activeEl.$prevEl.focus()
+        return
+      }
+
+      activeEl.$nextEl.focus()
     },
     focusPrev() {
       if (this.notExistsTodo) return
 
       const activeEl = this.activeElement()
-      const $listItemLastChild = this.todoList.lastElementChild
 
       if (activeEl.tagName === 'input') return
-      if (activeEl.tagName === 'body') return $listItemLastChild.focus()
-      if (!activeEl.$prevEl) return $listItemLastChild.focus()
-
       activeEl.$prevEl.focus()
     },
     focusNext() {
       if (this.notExistsTodo) return
 
       const activeEl = this.activeElement()
-      const $listItemFirstChild = this.todoList.firstElementChild
 
       if (activeEl.tagName === 'input') return
-      if (activeEl.tagName === 'body') return $listItemFirstChild.focus()
-      if (!activeEl.$nextEl) return $listItemFirstChild.focus()
       activeEl.$nextEl.focus()
     },
     replaceTodos(direction) {
@@ -255,7 +305,7 @@ export default {
 
       if (this.getSelectedStatus !== 'todo') return
       // n
-      if(e.keyCode === 78) return this.addTodo('')
+      if(e.keyCode === 78) return this.$el.querySelector(`.${this.$style.input}`).focus()
     }
   }
 }
@@ -366,8 +416,31 @@ export default {
     border-bottom 2px solid #9acd32
     &.is-active
       background #9acd32
+.groupList
+  margin auto
+  width 800px
+  position relative
+.group
+  margin 0 auto 30px
+  transition .3s
+.label
+  display flex
+  align-items center
+  color #fff
+  text-align center
+  width 498px
+  margin auto
+  position relative
+  .borderBefore,
+  .borderAfter
+    flex-grow 1
+    height 1px
+    width 200px
+    background #fff
+  .text
+    margin 0 15px
 .list
-  margin 40px auto 0
+  margin 10px auto 0
   width 498px
   position relative
 .listItem
@@ -401,4 +474,5 @@ export default {
 .todoItem-leave-active
   position absolute
   left 0
+  right 0
 </style>

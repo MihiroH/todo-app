@@ -27,7 +27,7 @@ export default {
         return value >= 1
       }
     },
-    initializeCount: {
+    initialCount: {
       type: Number,
       required: true,
       validator(value) {
@@ -41,7 +41,6 @@ export default {
   },
   data() {
     return {
-      value: 0,
       inputCount: 0,
       inputNumberHistory: []
     }
@@ -63,7 +62,7 @@ export default {
     currentValue() {
       const minValue = this.minValue
       const maxValue = this.maxValue
-      const initializeCount = this.initializeCount
+      const initialCount = this.initialCount
 
       if (minValue === maxValue) {
         console.error('minValueの値がmaxValueの値と同じです')
@@ -73,12 +72,12 @@ export default {
         console.error('minValueの値がmaxValueの値を超えています')
         return 0
       }
-      if (initializeCount < minValue) {
-        console.error('initializeCountの値がminValueの値より小さいです')
+      if (initialCount < minValue) {
+        console.error('initialCountの値がminValueの値より小さいです')
         return 0
       }
 
-      return this.initializeCount
+      return this.initialCount
     }
   },
   methods: {
@@ -100,8 +99,6 @@ export default {
       const keyCode = e.keyCode
       const char = String.fromCharCode(keyCode)
 
-      this.$emit('input-keydown', keyCode)
-
       if (keyCode === 38) return this.countup()
       if (keyCode === 40) return this.countdown()
       if (/\D/.test(char)) return
@@ -116,11 +113,13 @@ export default {
       let result = this.inputNumberHistory
 
       if (result.join('') > this.maxValue) return
+      if (result.join('') < this.minValue) return
 
       this.inputCount === this.strMaxValue.length - 1
         ? this.inputCount = 0
         : this.inputCount++
-      this.value = result.join('')
+
+      this.$emit('input-change', Number(result.join('')))
     }
   }
 }
