@@ -1,4 +1,4 @@
-# clock
+# Todo App
 
 ## Project setup
 ```
