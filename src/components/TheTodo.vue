@@ -1,5 +1,9 @@
 <template lang="pug">
 div(:class="$style.wrap")
+  router-link(
+    :to="'/blogs'"
+    :class="$style.backTo"
+  ) Blogsへ
   h1(:class="$style.title") Todo
   div(:class="$style.form")
     div(:class="$style.inputWrap")
@@ -323,6 +327,12 @@ export default {
 .wrap
   color #9acd32
   padding 30px
+.backTo
+  position absolute
+  left 16px
+  top 16px
+  font-size 16px
+  color #fff
 .title
   font-size 52px
   font-weight bold

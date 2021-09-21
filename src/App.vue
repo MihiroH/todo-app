@@ -1,27 +1,22 @@
 <template lang="pug">
 div#app
-  div(:class="$style.wrap")
-    TheClock(:class="$style.clock")
-    TheTodo
+  router-view
+  TheClock(:class="$style.clock")
 </template>
 
 <script>
 import TheClock from '@/components/TheClock'
-import TheTodo from '@/components/TheTodo'
 
 export default {
   name: 'app',
   components: {
-    TheClock,
-    TheTodo
+    TheClock
   }
 }
 
 </script>
 
 <style lang="stylus" module>
-.wrap
-  width 100vw
 .clock
   transform translate(35%, -35%) scale(.3)
   position fixed
