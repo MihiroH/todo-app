@@ -1,6 +1,4 @@
 module.exports = {
-  publicPath: process.env.NODE_ENV === 'production'
-    ? '/clock/'
-    : '/',
-  outputDir: 'dist/clock/'
+  publicPath: process.env.NODE_ENV === 'production' ? '/currents/' : '/',
+  outputDir: process.env.NODE_ENV === 'production' ? 'dist/currents/' : 'dist',
 }
