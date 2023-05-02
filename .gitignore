@@ -1,8 +1,21 @@
 .DS_Store
 node_modules
-/dist
+dist
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/vendor
+/.phpunit.cache
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+auth.json
 
-# local env files
+# env files
+.env
+.env.backup
+.env.production
 .env.local
 .env.*.local
 
@@ -12,6 +25,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # Editor directories and files
+.fleet
 .idea
 .vscode
 *.suo
