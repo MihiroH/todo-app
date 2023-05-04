@@ -18,4 +18,13 @@ stop-api:
 down-api:
 	./vendor/bin/sail down
 
-.PHONY: serve-app build-app lint-app serve-api stop-api down-api
+test-api:
+	./vendor/bin/sail artisan test
+
+migrate-up:
+	./vendor/bin/sail artisan migrate
+
+db-seed:
+	./vendor/bin/sail artisan db:seed
+
+.PHONY: serve-app build-app lint-app serve-api stop-api down-api test-api migrateup
