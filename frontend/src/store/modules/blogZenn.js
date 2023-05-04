@@ -36,7 +36,7 @@ const actions = {
     commit('UPDATED_LOADING', true)
 
     try {
-      const res = await axios.get('https://zenn-api.netlify.app/.netlify/functions/trendTech')
+      const res = await axios.get('https://zenn-api.vercel.app/api/trendTech')
 
       commit('UPDATE_ITEMS', res.data)
     } catch (e) {
