@@ -1,11 +1,13 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 
+import MyAbortController from '@/utils/myAbortController'
+
 Vue.use(Router)
 
-export default new Router({
+const router = new Router({
   mode: 'history',
-  base: process.env.NODE_ENV === 'production' ? '/currents/' : '/',
+  base: '/',
   routes: [
     {
       path: '/',
@@ -24,3 +26,11 @@ export default new Router({
     }
   ]
 })
+
+// ルートが変わるときにajax通信をキャンセルする
+router.beforeEach((to, from, next) => {
+  MyAbortController.abort()
+  next()
+})
+
+export default router

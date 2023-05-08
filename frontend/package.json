@@ -3,12 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "serve": "VUE_CLI_SERVICE_CONFIG_PATH=$PWD/config/vue.config.js vue-cli-service serve",
-    "build": "VUE_CLI_SERVICE_CONFIG_PATH=$PWD/config/vue.config.js vue-cli-service build",
+    "serve": "VUE_CLI_SERVICE_CONFIG_PATH=$PWD/config/vue.config.js vue-cli-service serve --mode development",
+    "build": "VUE_CLI_SERVICE_CONFIG_PATH=$PWD/config/vue.config.js vue-cli-service build --mode production",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "axios": "^0.21.4",
+    "axios": "^1.4.0",
+    "axios-case-converter": "^1.1.0",
     "core-js": "^3.4.4",
     "vue": "^2.6.10",
     "vue-ctk-date-time-picker": "^2.4.0",

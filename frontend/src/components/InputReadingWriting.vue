@@ -1,7 +1,7 @@
 <template lang="pug">
 div(
   :class="$style.wrap"
-  @keyup.exact.enter="edit"
+  @keyup.exact.enter="end"
 )
   BaseInput(
     v-if="writingMode"
@@ -59,8 +59,6 @@ export default {
       this.$emit('input-dblclick')
     },
     end() {
-      this.$emit('input-end')
-
       const newValue = this.text ? this.text : this.value
       this.text = newValue
       this.$emit('input-end', newValue)

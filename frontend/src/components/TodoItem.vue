@@ -14,7 +14,7 @@ li(
   div(:class="$style.body")
     div(:class="$style.primary")
       InputReadingWriting(
-        :value="todoObj.todo"
+        :value="todoObj.title"
         :writingMode="writingMode"
         :class="$style.taskName"
         @input-dblclick="startWrite"
@@ -62,7 +62,7 @@ li(
           InputNumberAdvanced(
             :minValue="1"
             :maxValue="999"
-            :initialCount="todoObj.estimatedTime.minutes"
+            :initialCount="estimatedTime.minutes"
             :useZeroPadding="false"
             @input-change="updateEstimatedTime"
             @input-countup="updateEstimatedTime"
@@ -72,18 +72,17 @@ li(
         div(
           v-if="todoObj.status === 'todo'"
           :class="classNameTimerboxBtn"
-          @click="toggleTimer(todoObj.startTimerFlg)"
+          @click="toggleTimer(todoObj.isTimerStarted)"
         )
 </template>
 
 <script>
 import BaseCheckbox from '@/components/BaseCheckbox'
 import Calendar from '@/components/Calendar'
-import InputHoursMinutes from '@/components/InputHoursMinutes'
 import InputNumberAdvanced from '@/components/InputNumberAdvanced'
 import InputReadingWriting from '@/components/InputReadingWriting'
 
-import { mapGetters, mapMutations } from 'vuex'
+import { mapActions, mapGetters, mapMutations } from 'vuex'
 import { mixinSuggestDateFromTo } from '@/mixins/suggestDateFromTo'
 
 export default {
@@ -91,7 +90,6 @@ export default {
   components: {
     BaseCheckbox,
     Calendar,
-    InputHoursMinutes,
     InputNumberAdvanced,
     InputReadingWriting
   },
@@ -116,6 +114,9 @@ export default {
       estimatedTime: {
         minutes: 1
       },
+      delayOfUpdateTime: 3000,
+      timerIdWorkingTime: null,
+      timerIdEstimatedTime: null,
       iconList: [
         {
           typeOfDate: 'fromDate',
@@ -151,16 +152,16 @@ export default {
       return [
         this.$style.timerboxBtn,
         {
-          [this.$style['is-active']]: this.todoObj.startTimerFlg
+          [this.$style['is-active']]: this.todoObj.isTimerStarted
         }
       ]
     },
-    startTimerFlg() {
-      return this.todoObj.startTimerFlg
+    isTimerStarted() {
+      return this.todoObj.isTimerStarted
     }
   },
   watch: {
-    startTimerFlg: {
+    isTimerStarted: {
       handler: function (value) {
         if (value) return this.startTimer()
         this.stopTimer()
@@ -178,7 +179,10 @@ export default {
       'ADD_TODO',
       'EDIT_TODO',
       'REMOVE_TODO',
-      'TOGGLE_TODO_LIST_TIMER'
+    ]),
+    ...mapActions('todos', [
+      'updateTodo',
+      'deleteTodo',
     ]),
     updateTaskName(newValue) {
       this.taskName = newValue
@@ -192,27 +196,30 @@ export default {
       this.$el.focus()
     },
     removeTodo() {
-      this.REMOVE_TODO({
+      this.deleteTodo({
         status: this.todoObj.status,
         id: this.todoObj.id
       })
       this.$emit('todo-removed')
     },
     doneTodo() {
-      const todo = this.todoObj
-      this.REMOVE_TODO({
-        status: 'todo',
-        id: todo.id
-      })
-      this.ADD_TODO({
-        id: todo.id,
-        todo: todo.todo,
+      const newTodo = {
+        id: this.todoObj.id,
+        title: this.todoObj.title,
         status: 'done',
-        startTimerFlg: false,
+        isTimerStarted: false,
         workingTime: this.workingTime,
         estimatedTime: this.estimatedTime,
         date: this.todoObj.date
+      }
+      this.REMOVE_TODO({
+        id: this.todoObj.id,
+        status: 'todo'
       })
+      this.ADD_TODO(newTodo)
+
+      // APIとしてはupdate
+      this.updateTodo(newTodo)
     },
     saveTodo(text, dateObj) {
       const date = Object.assign({}, this.todoObj.date)
@@ -221,26 +228,25 @@ export default {
         Object.keys(dateObj).forEach(key => date[key] = dateObj[key])
       }
 
-      this.EDIT_TODO({
-        id: this.todoObj.id,
-        params: {
-          todo: text,
-          workingTime: this.workingTime,
-          estimatedTime: this.estimatedTime,
-          date: date
-        }
-      })
+      const todo = {
+        ...this.todoObj,
+        title: text,
+        workingTime: this.workingTime,
+        estimatedTime: this.estimatedTime,
+        date,
+      }
+      this.updateTodo(todo)
     },
     toggleChecked() {
       this.isChecked = !this.isChecked
-      this.wait(1500, this.doneTodo)
+      this.executeAfter(this.doneTodo, 1500, 'waitTimerId', true)
     },
     startTimer() {
       this.todoTimerId = setInterval(() => {
         if (this.workingTime.seconds === 59) {
           this.workingTime.seconds = 0
           this.workingTime.minutes++
-          this.saveTodo(this.todoObj.todo)
+          this.saveTodo(this.todoObj.title)
         } else {
           this.workingTime.seconds++
         }
@@ -251,28 +257,39 @@ export default {
     },
     updateEstimatedTime(value) {
       this.estimatedTime.minutes = value
-      this.saveTodo(this.todoObj.todo)
+
+      this.executeAfter(
+        () => this.saveTodo(this.todoObj.title),
+        this.delayOfUpdateTime,
+        'timerIdEstimatedTime'
+      )
     },
     updateTimer(value) {
-      this.toggleTimer(true)
+      this.todoObj.isTimerStarted = false
       this.workingTime.minutes = value
-      this.saveTodo(this.todoObj.todo)
+      console.log(value)
+
+      this.executeAfter(
+        () => {
+          this.saveTodo(this.todoObj.title)
+        },
+        this.delayOfUpdateTime,
+        'timerIdWorkingTime'
+      )
     },
-    toggleTimer(startTimerFlg) {
-      const params = {
-        id: this.todoObj.id,
-        startTimerFlg: startTimerFlg
-      }
-      this.TOGGLE_TODO_LIST_TIMER(params)
+    toggleTimer(isTimerStarted) {
+      this.updateTodo({ ...this.todoObj, isTimerStarted: !isTimerStarted })
     },
-    wait(delay, callback) {
-      if (this.waitTimerId) {
-        clearTimeout(this.waitTimerId)
-        this.waitTimerId = null
-        return
+    executeAfter(callback, delay, timerIdName = 'waitTimerId', cancelWhen2ndTime = false) {
+      if (this[timerIdName]) {
+        clearTimeout(this[timerIdName])
+        this[timerIdName] = null
+        if (cancelWhen2ndTime) {
+          return
+        }
       }
 
-      this.waitTimerId = setTimeout(() => {
+      this[timerIdName] = setTimeout(() => {
         callback()
       }, delay)
     },
@@ -287,7 +304,7 @@ export default {
       const dateObj = {}
       dateObj[typeOfDate] = newValueObj
 
-      this.saveTodo(this.todoObj.todo, dateObj)
+      this.saveTodo(this.todoObj.title, dateObj)
       this.toggleVisibleCalendar()
     },
     handleKeydown(e) {
@@ -299,7 +316,7 @@ export default {
       // .
       if (e.keyCode === 190) return this.toggleChecked()
       // t
-      if (e.keyCode === 84) return this.toggleTimer(this.todoObj.startTimerFlg)
+      if (e.keyCode === 84) return this.toggleTimer(this.todoObj.isTimerStarted)
     }
   }
 }

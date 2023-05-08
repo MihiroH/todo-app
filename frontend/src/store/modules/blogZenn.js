@@ -1,4 +1,4 @@
-import axios from 'axios'
+import { request } from '@/utils/request'
 
 const state = {
   items: [],
@@ -36,7 +36,11 @@ const actions = {
     commit('UPDATED_LOADING', true)
 
     try {
-      const res = await axios.get('https://zenn-api.vercel.app/api/trendTech')
+      const res = await request({
+        method: 'get',
+        url: '/trendTech',
+        baseURL: process.env.VUE_APP_BASE_ZENN_API_URL,
+      })
 
       commit('UPDATE_ITEMS', res.data)
     } catch (e) {

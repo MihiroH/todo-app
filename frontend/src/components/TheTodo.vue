@@ -126,13 +126,6 @@ export default {
       }
       return groupByDate()
     },
-    todoList() {
-      return this.$el.getElementsByClassName(`${this.$style.list}`)[0]
-    },
-    notExistsTodo() {
-      if (this.todoList.children.length === 0) return true
-      return false
-    },
     taskName() {
       const regex = new RegExp('(From |To )([0-9]| |/|.)+', 'g')
       const formatText = this.text.replace(regex, '')
@@ -154,16 +147,27 @@ export default {
       'REPLACE_TODOS'
     ]),
     ...mapActions('todos', [
-      'fetchTodos'
+      'fetchTodos',
+      'createTodo',
     ]),
+    todoLists() {
+      return this.$el.querySelectorAll(`.${this.$style.list}`)
+    },
+    firstTodoList() {
+      return this.todoLists()[0]
+    },
+    notExistsTodo() {
+      if (this.firstTodoList().children.length === 0) return true
+      return false
+    },
     addTodo(text) {
       const selectedDateFromTo = this.mixinSelectedDateFromTo(text)
 
       const todo = {
         id: getUniqueStr(),
-        todo: this.taskName,
+        title: this.taskName,
         status: 'todo',
-        startTimerFlg: false,
+        isTimerStarted: false,
         workingTime: {
           minutes: 0
         },
@@ -176,7 +180,7 @@ export default {
         }
       }
 
-      this.ADD_TODO(todo)
+      this.createTodo(todo)
       this.$el.querySelector(`.${this.$style.input}`).focus()
       this.text = ''
     },
@@ -220,7 +224,7 @@ export default {
       activeEl.$nextEl.focus()
     },
     focusPrev() {
-      if (this.notExistsTodo) return
+      if (this.notExistsTodo()) return
 
       const activeEl = this.activeElement()
 
@@ -228,7 +232,7 @@ export default {
       activeEl.$prevEl.focus()
     },
     focusNext() {
-      if (this.notExistsTodo) return
+      if (this.notExistsTodo()) return
 
       const activeEl = this.activeElement()
 
@@ -236,18 +240,19 @@ export default {
       activeEl.$nextEl.focus()
     },
     replaceTodos(direction) {
-      if (this.notExistsTodo) return
+      if (this.todoLists().length > 1) return // 開始日が異なるTodoリストが複数ある場合、並べ替えは不可
+      if (this.notExistsTodo()) return
 
       const activeEl = this.activeElement()
       const exceptList = ['input', 'body']
       if (exceptList.includes(activeEl.tagName)) return
 
-      const index = [...this.todoList.children].indexOf(activeEl.$current)
+      const index = [...this.firstTodoList().children].indexOf(activeEl.$current)
       const prevIndex = direction === 'top' ? index - 1 : index
       const nextIndex = direction === 'bottom' ? index + 1 : index
 
       if (prevIndex < 0) return
-      if (nextIndex > this.todoList.children.length) return
+      if (nextIndex > this.firstTodoList().children.length) return
 
       this.REPLACE_TODOS({ prevIndex, nextIndex, direction })
 

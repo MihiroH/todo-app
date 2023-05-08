@@ -16,6 +16,7 @@ auth.json
 .env
 .env.backup
 .env.production
+.env.testing
 .env.local
 .env.*.local
 
