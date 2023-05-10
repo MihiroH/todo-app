@@ -8,9 +8,20 @@ use Tests\TestCase;
 
 class TodoTest extends TestCase
 {
+    private $userIp = '192.168.1.1';
+
+    public function setUp() :void
+    {
+        parent::setUp();
+        $this->withServerVariables(['REMOTE_ADDR' => $this->userIp]);
+    }
+
     public function testIndex(): void
     {
-        $todos = Todo::factory(3)->create();
+
+        $todos = Todo::factory(3)->create([
+            'user_ip' => $this->userIp,
+        ]);
 
         $response = $this->get(route('todos.index'));
 
@@ -22,6 +33,7 @@ class TodoTest extends TestCase
     public function testStore(): void
     {
         $todo = Todo::factory()->make();
+        unset($todo['user_ip']);
 
         $response = $this->post(route('todos.store'), $todo->toArray());
 

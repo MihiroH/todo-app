@@ -15,6 +15,7 @@ return new class extends Migration
     {
         Schema::create($this->table, function (Blueprint $table) {
             $table->id()->comment('ID');
+            $table->string('user_ip')->comment('ipアドレス');
             $table->text('title')->comment('タイトル');
             $table->string('status')->comment('ステータス');;
             $table->timestamp('start_date')->nullable()->comment('開始日');
