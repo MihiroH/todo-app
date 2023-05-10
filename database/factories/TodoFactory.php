@@ -18,6 +18,7 @@ class TodoFactory extends Factory
     public function definition(): array
     {
         return [
+            'user_ip' => fake()->ipv4(),
             'title' => fake()->realText(),
             'status' => fake()->randomElement(Todo::STATUS_LIST),
             'start_date' => now()->format('Y-m-d H:i:s'),
