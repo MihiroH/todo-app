@@ -1,4 +1,5 @@
-import storageAvailable from '@/utils/storageAvailable'
+import { formatTodosForDisplay, formatTodoForDisplay, formatTodoForApi } from '@/utils/formatTodos'
+import { request } from '@/utils/request'
 
 const state = {
   todos: {
@@ -24,19 +25,28 @@ const getters = {
 
 const mutations = {
   INIT_TODOS(state, payload) {
-    for (const key of Object.keys(payload)) {
-      if (!state.todos.hasOwnProperty(key)) continue
-      state.todos[key] = payload[key]
-    }
-  },
-  ADD_TODO(state, payload) {
-    const targetObj = {
+    const statusMap = {
       todo: 'todoList',
       done: 'doneList'
     }
-    if (!targetObj.hasOwnProperty(payload.status)) return
+    const formattedTodos = formatTodosForDisplay(payload)
+    const newTodos = Object.entries(statusMap).reduce((acc, [status, key]) => {
+      const list = formattedTodos.filter((todo) => todo.status === status)
+      return {
+        ...acc,
+        [key]: list
+      }
+    }, {})
+    state.todos = newTodos
+  },
+  ADD_TODO(state, payload) {
+    const statusMap = {
+      todo: 'todoList',
+      done: 'doneList'
+    }
+    if (!statusMap.hasOwnProperty(payload.status)) return
 
-    const target = targetObj[payload.status]
+    const target = statusMap[payload.status]
     state.todos[target].push(payload)
   },
   EDIT_TODO(state, payload) {
@@ -46,7 +56,7 @@ const mutations = {
     for (let i = 0; i < length; i = (i+1) | 0) {
       if (todos[i].id !== payload.id) continue
 
-      const newTodo = Object.assign({}, todos[i], payload.params)
+      const newTodo = Object.assign({}, todos[i], payload)
       todos.splice(i, 1, newTodo)
       break
     }
@@ -60,20 +70,6 @@ const mutations = {
 
     const target = targetObj[payload.status]
     state.todos[target] = state.todos[target].filter(todo => todo.id !== payload.id)
-  },
-  TOGGLE_TODO_LIST_TIMER(state, payload) {
-    const array = state.todos.todoList.map(todo => {
-      let startTimerFlg = false
-      if (todo.id === payload.id) {
-        startTimerFlg = !payload.startTimerFlg
-      }
-      return {
-        ...todo,
-        startTimerFlg
-      }
-    })
-
-    return state.todos.todoList = array
   },
   REPLACE_TODOS(state, payload) {
     const prevIndex = payload.prevIndex
@@ -92,42 +88,45 @@ const mutations = {
 }
 
 const actions = {
-  fetchTodos({ commit }) {
-    if (!storageAvailable('localStorage')) {
-      return alert('localStorageが有効ではありません')
-    }
-
+  async fetchTodos({ commit }) {
     commit('UPDATE_LOADING_FLG', true)
 
-    const todos = JSON.parse(localStorage.getItem('todos')) || []
-    commit('INIT_TODOS', todos)
-
-    commit('UPDATE_LOADING_FLG', false)
-  }
-}
-
-export const pluginTodos = store => {
-  // ストアが更新されたときに呼ばれます
-  store.subscribe((mutation, { todos }) => {
-    if (!storageAvailable('localStorage')) {
-      return alert('localStorageが有効ではありません')
+    try {
+      const { data } = await request.get('/todos')
+      commit('INIT_TODOS', data)
+    } catch (e) {
+      console.log(e)
     }
 
-    const types = [
-      'todos/ADD_TODO',
-      'todos/EDIT_TODO',
-      'todos/REMOVE_TODO',
-      'todos/TOGGLE_TODO_LIST_TIMER',
-      'todos/REPLACE_TODOS'
-    ]
-    types.forEach(type => {
-      if (mutation.type === type) {
-        localStorage.setItem('todos', JSON.stringify(todos.todos))
-      }
-    })
-  })
+    commit('UPDATE_LOADING_FLG', false)
+  },
+  async createTodo({ commit }, payload) {
+    const params = formatTodoForApi(payload)
+    try {
+      const { data } = await request.post(`/todos`, params)
+      commit('ADD_TODO', formatTodoForDisplay(data))
+    } catch (e) {
+      console.log(e)
+    }
+  },
+  async updateTodo({ commit }, payload) {
+    const params = formatTodoForApi(payload)
+    try {
+      await request.put(`/todos/${payload.id}`, params)
+      commit('EDIT_TODO', payload)
+    } catch (e) {
+      console.log(e)
+    }
+  },
+  async deleteTodo({ commit }, payload) {
+    try {
+      await request.delete(`/todos/${payload.id}`)
+      commit('REMOVE_TODO', payload)
+    } catch (e) {
+      console.log(e)
+    }
+  }
 }
-
 
 export default {
   namespaced: true,

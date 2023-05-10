@@ -1,4 +1,4 @@
-import axios from 'axios'
+import { request } from '@/utils/request'
 
 const state = {
   items: [],
@@ -52,7 +52,12 @@ const actions = {
         params.query = payload.query
       }
 
-      const res = await axios.get('https://qiita.com/api/v2/items', { params })
+      const res = await request({
+        method: 'get',
+        url: '/items',
+        baseURL: process.env.VUE_APP_BASE_QIITA_API_URL,
+        params,
+      })
 
       commit('UPDATE_ITEMS', res.data)
     } catch (e) {

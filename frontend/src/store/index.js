@@ -1,6 +1,5 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import { pluginTodos } from '@/store/modules/todos'
 
 Vue.use(Vuex)
 
@@ -16,6 +15,5 @@ context.keys().forEach(filePath => { // コンテキストに含まれるパス�
 })
 
 export default new Vuex.Store ({
-  modules,
-  plugins: [pluginTodos]
+  modules
 })
