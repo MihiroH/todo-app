@@ -13,7 +13,7 @@ class TodoController extends Controller
      */
     public function index()
     {
-        return Todo::all();
+        return Todo::where('user_ip', request()->ip())->get();
     }
 
     /**
@@ -29,6 +29,7 @@ class TodoController extends Controller
             'is_timer_started' => $request->is_timer_started,
             'working_minutes' => $request->working_minutes,
             'estimated_minutes' => $request->estimated_minutes,
+            'user_ip' => $request->ip(),
         ]);
 
         return response()->json($todo);

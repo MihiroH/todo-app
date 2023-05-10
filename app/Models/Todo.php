@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
  * Todoのモデル
  *
  * @property int $id
- * @property int $user_id
+ * @property string $user_ip
  * @property string $title
  * @property string $status
  * @property \Illuminate\Support\Carbon $start_date
@@ -38,7 +38,7 @@ class Todo extends Model
     ];
 
     protected $fillable = [
-        'user_id',
+        'user_ip',
         'title',
         'status',
         'start_date',
